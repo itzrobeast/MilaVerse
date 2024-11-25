@@ -2,6 +2,27 @@ import { useEffect } from 'react';
 import { apiFetch } from '../utils/api'; // Import the API utility
 
 export default function Login() {
+  // Check login status and handle response
+  const checkLoginStatus = () => {
+    FB.getLoginStatus(function (response) {
+      console.log('Facebook login status:', response);
+
+      if (response.status === 'connected') {
+        console.log('User is already connected:', response.authResponse);
+
+        // Fetch user data and proceed with app logic
+        FB.api('/me', { fields: 'id,name,email' }, function (userData) {
+          console.log('User Data:', userData);
+          handleBackendSetup(userData, response.authResponse);
+        });
+      } else if (response.status === 'not_authorized') {
+        console.log('User is logged into Facebook but not authorized your app.');
+      } else {
+        console.log('User is not logged into Facebook.');
+      }
+    });
+  };
+
   // Initialize Facebook SDK
   useEffect(() => {
     const initializeFacebookSDK = () => {
@@ -14,6 +35,9 @@ export default function Login() {
             version: 'v21.0', // Use the latest Graph API version
           });
           console.log('Facebook SDK initialized.');
+
+          // Check login status after SDK initialization
+          checkLoginStatus();
         } else {
           console.error('Facebook SDK not loaded.');
         }
@@ -51,7 +75,7 @@ export default function Login() {
           FB.api('/me', { fields: 'id,name,email' }, function (userData) {
             console.log('Facebook User Data:', userData);
 
-            // Handle backend setup
+            // Handle backend communication
             handleBackendSetup(userData, response.authResponse);
           });
         } else {
@@ -59,13 +83,11 @@ export default function Login() {
           alert('Facebook login was not completed. Please try again.');
         }
       },
-      {
-        scope: 'public_profile,email,pages_show_list,instagram_manage_messages', // Request necessary permissions
-      }
+      { scope: 'public_profile,email,pages_show_list,instagram_manage_messages' } // Request necessary permissions
     );
   };
 
-  // Async function to handle backend communication
+  // Async function to handle backend API calls
   const handleBackendSetup = async (userData, authResponse) => {
     try {
       const payload = {
