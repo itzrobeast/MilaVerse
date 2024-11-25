@@ -7,50 +7,57 @@ export default function Login() {
     window.fbAsyncInit = function () {
       FB.init({
         appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID, // Your Facebook App ID
-        cookie: true,
-        xfbml: true,
-        version: 'v17.0',
+        cookie: true, // Enable cookies
+        xfbml: true, // Parse social plugins
+        version: 'v17.0', // Graph API version
       });
     };
   }, []);
 
   const handleLogin = () => {
-    FB.login(
-      async function (response) {
-        if (response.authResponse) {
-          console.log('Facebook Login Successful:', response);
+    if (typeof FB === 'undefined') {
+      alert('Facebook SDK not loaded. Please try again later.');
+      return;
+    }
 
-          // Fetch user info from Facebook
-          FB.api('/me', { fields: 'id,name,email' }, async function (userData) {
-            console.log('Facebook User Data:', userData);
+    FB.login(function (response) {
+      if (response.authResponse) {
+        console.log('Facebook Login Successful:', response);
 
-            try {
-              // Send user data and access token to backend
-              const backendResponse = await apiFetch('/setup-business', {
-                method: 'POST',
-                body: JSON.stringify({
-                  user: userData,
-                  accessToken: response.authResponse.accessToken,
-                  businessId: response.authResponse.userID,
-                }),
-              });
+        // Fetch user info from Facebook
+        FB.api('/me', { fields: 'id,name,email' }, function (userData) {
+          console.log('Facebook User Data:', userData);
 
-              console.log('Backend Response:', backendResponse);
+          // Call a separate async function to handle backend communication
+          handleBackendSetup(userData, response.authResponse);
+        });
+      } else {
+        console.log('User cancelled login or did not authorize.');
+        alert('Facebook login was not completed. Please try again.');
+      }
+    }, { scope: 'public_profile,email,pages_show_list,instagram_manage_messages' });
+  };
 
-              // Redirect to the dashboard or show success message
-              window.location.href = '/dashboard';
-            } catch (error) {
-              console.error('Error connecting to backend:', error);
-              alert('An error occurred while setting up your account. Please try again.');
-            }
-          });
-        } else {
-          console.log('User cancelled login or did not authorize.');
-          alert('Facebook login was not completed. Please try again.');
-        }
-      },
-      { scope: 'public_profile,email,pages_show_list,instagram_manage_messages' }
-    );
+  const handleBackendSetup = async (userData, authResponse) => {
+    try {
+      // Send user data and access token to the backend
+      const backendResponse = await apiFetch('/setup-business', {
+        method: 'POST',
+        body: JSON.stringify({
+          user: userData,
+          accessToken: authResponse.accessToken,
+          businessId: authResponse.userID,
+        }),
+      });
+
+      console.log('Backend Response:', backendResponse);
+
+      // Redirect to the dashboard or show success message
+      window.location.href = '/dashboard';
+    } catch (error) {
+      console.error('Error connecting to backend:', error);
+      alert('An error occurred while setting up your account. Please try again.');
+    }
   };
 
   return (
