@@ -50,26 +50,42 @@ export default function Login() {
     );
 };
 
+const handleBackendSetup = async (userData, authResponse) => {
+  try {
+    const payload = {
+      user: userData,
+      accessToken: authResponse.accessToken,
+      businessId: authResponse.userID, // Assuming userID maps to businessId
+    };
 
-  const handleBackendSetup = async (userData, authResponse) => {
-    try {
-      const payload = {
-        user: userData,
-        accessToken: authResponse.accessToken,
-        businessId: authResponse.userID,
-      };
-      const backendResponse = await apiFetch('/setup-business', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      console.log('Backend Response:', backendResponse);
-      window.location.href = '/dashboard';
-    } catch (error) {
-      console.error('Backend error:', error);
-      alert('An error occurred. Please try again.');
+    console.log('[DEBUG] Sending data to backend:', payload);
+
+    const response = await fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/setup-business', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json', // Ensure the Content-Type header is set
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('[DEBUG] Backend error:', error);
+      throw new Error('Failed to connect to backend');
     }
-  };
+
+    const backendResponse = await response.json();
+    console.log('[DEBUG] Backend Response:', backendResponse);
+
+    // Redirect to the dashboard after a successful login
+    window.location.href = '/dashboard';
+  } catch (error) {
+    console.error('[DEBUG] Error connecting to backend:', error);
+    alert('An error occurred while setting up your account. Please try again.');
+  }
+};
+
+
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
