@@ -1,93 +1,52 @@
 import { useEffect } from 'react';
-import { apiFetch } from '../utils/api'; // Import the API utility
+import { apiFetch } from '../utils/api';
 
 export default function Login() {
-  // Check login status and handle response
+  useEffect(() => {
+    if (typeof FB === 'undefined') {
+      console.error('Facebook SDK not loaded.');
+      return;
+    }
+
+    window.fbAsyncInit = function () {
+      FB.init({
+        appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+        cookie: true,
+        xfbml: true,
+        version: 'v21.0',
+      });
+      console.log('Facebook SDK initialized.');
+      checkLoginStatus();
+    };
+  }, []);
+
   const checkLoginStatus = () => {
-    FB.getLoginStatus(function (response) {
-      console.log('Facebook login status:', response);
-
+    FB.getLoginStatus((response) => {
       if (response.status === 'connected') {
-        console.log('User is already connected:', response.authResponse);
-
-        // Fetch user data and proceed with app logic
-        FB.api('/me', { fields: 'id,name,email' }, function (userData) {
-          console.log('User Data:', userData);
+        FB.api('/me', { fields: 'id,name,email' }, (userData) => {
           handleBackendSetup(userData, response.authResponse);
         });
-      } else if (response.status === 'not_authorized') {
-        console.log('User is logged into Facebook but not authorized your app.');
       } else {
-        console.log('User is not logged into Facebook.');
+        console.log('User not connected.');
       }
     });
   };
 
-  // Initialize Facebook SDK
-  useEffect(() => {
-    const initializeFacebookSDK = () => {
-      window.fbAsyncInit = function () {
-        if (typeof FB !== 'undefined') {
-          FB.init({
-            appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID, // Your Facebook App ID
-            cookie: true, // Enable cookies for session tracking
-            xfbml: true, // Parse social plugins
-            version: 'v21.0', // Use the latest Graph API version
-          });
-          console.log('Facebook SDK initialized.');
-
-          // Check login status after SDK initialization
-          checkLoginStatus();
-        } else {
-          console.error('Facebook SDK not loaded.');
-        }
-      };
-
-      // Dynamically load the Facebook SDK script
-      const script = document.createElement('script');
-      script.async = true;
-      script.defer = true;
-      script.src = 'https://connect.facebook.net/en_US/sdk.js';
-      document.body.appendChild(script);
-
-      // Cleanup script on component unmount
-      return () => {
-        document.body.removeChild(script);
-      };
-    };
-
-    initializeFacebookSDK();
-  }, []); // Only run once on component mount
-
-  // Handle Facebook login
   const handleLogin = () => {
-    if (typeof FB === 'undefined') {
-      alert('Facebook SDK not loaded. Please try again later.');
-      return;
-    }
-
     FB.login(
-      function (response) {
+      (response) => {
         if (response.authResponse) {
-          console.log('Facebook Login Successful:', response);
-
-          // Fetch user info from Facebook
-          FB.api('/me', { fields: 'id,name,email' }, function (userData) {
-            console.log('Facebook User Data:', userData);
-
-            // Handle backend communication
+          FB.api('/me', { fields: 'id,name,email' }, (userData) => {
             handleBackendSetup(userData, response.authResponse);
           });
         } else {
-          console.log('User cancelled login or did not authorize.');
-          alert('Facebook login was not completed. Please try again.');
+          console.log('Login failed or canceled.');
         }
       },
-      { scope: 'public_profile,email,pages_show_list,instagram_manage_messages' } // Request necessary permissions
+      { scope: 'public_profile,email,pages_show_list,instagram_manage_messages' }
     );
   };
 
-  // Async function to handle backend API calls
   const handleBackendSetup = async (userData, authResponse) => {
     try {
       const payload = {
@@ -95,24 +54,16 @@ export default function Login() {
         accessToken: authResponse.accessToken,
         businessId: authResponse.userID,
       };
-
-      console.log('Sending data to backend:', payload);
-
       const backendResponse = await apiFetch('/setup-business', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
       console.log('Backend Response:', backendResponse);
-
-      // Redirect to dashboard after successful login
       window.location.href = '/dashboard';
     } catch (error) {
-      console.error('Error connecting to backend:', error);
-      alert('An error occurred while setting up your account. Please try again.');
+      console.error('Backend error:', error);
+      alert('An error occurred. Please try again.');
     }
   };
 
