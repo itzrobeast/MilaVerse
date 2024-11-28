@@ -74,6 +74,10 @@ export default function Login() {
         accessToken: authResponse.accessToken,
         businessId: authResponse.userID,
         reconnect: true, // Include a flag for reconnection
+        platform: 'Web',
+        businessName: userData.name,
+        ownerName: userData.name,
+        contactEmail: userData.email,
       };
 
       console.log('[DEBUG] Sending data to backend:', payload);
