@@ -55,7 +55,7 @@ const handleBackendSetup = async (userData, authResponse) => {
     const payload = {
       user: userData,
       accessToken: authResponse.accessToken,
-      businessId: authResponse.userID, // Assuming userID maps to businessId
+      businessId: authResponse.userID,
     };
 
     console.log('[DEBUG] Sending data to backend:', payload);
@@ -63,7 +63,7 @@ const handleBackendSetup = async (userData, authResponse) => {
     const response = await fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/setup-business', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json', // Ensure the Content-Type header is set
+        'Content-Type': 'application/json', // Ensure the Content-Type header is included
       },
       body: JSON.stringify(payload),
     });
@@ -76,6 +76,15 @@ const handleBackendSetup = async (userData, authResponse) => {
 
     const backendResponse = await response.json();
     console.log('[DEBUG] Backend Response:', backendResponse);
+
+    // Redirect to the dashboard after a successful login
+    window.location.href = '/dashboard';
+  } catch (error) {
+    console.error('[DEBUG] Error connecting to backend:', error);
+    alert('An error occurred while setting up your account. Please try again.');
+  }
+};
+
 
     // Redirect to the dashboard after a successful login
     window.location.href = '/dashboard';
