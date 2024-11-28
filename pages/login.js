@@ -69,12 +69,16 @@ export default function Login() {
 
   const handleBackendSetup = async (userData, authResponse) => {
     try {
+      const platform = typeof navigator !== 'undefined' && /Mobi|Android|iPhone/.test(navigator.userAgent)
+      ? 'Mobile'
+      : 'Web';
+      
       const payload = {
         user: userData,
         accessToken: authResponse.accessToken,
         businessId: authResponse.userID,
         reconnect: true, // Include a flag for reconnection
-        platform: 'Web',
+        platform,
         businessName: userData.name,
         ownerName: userData.name,
         contactEmail: userData.email,
