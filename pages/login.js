@@ -3,38 +3,18 @@ import { apiFetch } from '../utils/api';
 
 export default function Login() {
   useEffect(() => {
-    const loadFacebookSDK = () => {
-      window.fbAsyncInit = function () {
-        FB.init({
-          appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
-          cookie: true,
-          xfbml: true,
-          version: 'v16.0', // Use a supported version
-        });
-        console.log('Facebook SDK initialized.');
-        checkLoginStatus(); // Check login status after initialization
-      };
+    if (typeof FB === 'undefined') {
+      console.error('Facebook SDK not loaded.');
+      return;
+    }
 
-      // Dynamically load the Facebook SDK script
-      const script = document.createElement('script');
-      script.src = 'https://connect.facebook.net/en_US/sdk.js';
-      script.async = true;
-      script.defer = true;
-      document.body.appendChild(script);
-
-      // Cleanup script on component unmount
-      return () => {
-        document.body.removeChild(script);
-      };
-    };
-
-    loadFacebookSDK();
-  }, []); // Only run once on component mount
+    console.log('Facebook SDK is ready.');
+    checkLoginStatus();
+  }, []);
 
   const checkLoginStatus = () => {
     FB.getLoginStatus((response) => {
       if (response.status === 'connected') {
-        console.log('User is connected.');
         FB.api('/me', { fields: 'id,name,email' }, (userData) => {
           handleBackendSetup(userData, response.authResponse);
         });
@@ -48,7 +28,6 @@ export default function Login() {
     FB.login(
       (response) => {
         if (response.authResponse) {
-          console.log('Login successful:', response);
           FB.api('/me', { fields: 'id,name,email' }, (userData) => {
             handleBackendSetup(userData, response.authResponse);
           });
@@ -67,19 +46,16 @@ export default function Login() {
         accessToken: authResponse.accessToken,
         businessId: authResponse.userID,
       };
-      console.log('Sending data to backend:', payload);
-
       const backendResponse = await apiFetch('/setup-business', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
       console.log('Backend Response:', backendResponse);
       window.location.href = '/dashboard';
     } catch (error) {
       console.error('Backend error:', error);
-      alert('An error occurred while setting up your account. Please try again.');
+      alert('An error occurred. Please try again.');
     }
   };
 
