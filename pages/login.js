@@ -79,6 +79,7 @@ export default function Login() {
         businessId: authResponse.userID,
         reconnect: true, // Include a flag for reconnection
         platform,
+        appId: 'milaVerse',
         businessName: userData.name,
         ownerName: userData.name,
         contactEmail: userData.email,
