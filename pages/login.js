@@ -26,18 +26,30 @@ export default function Login() {
 
   const handleLogin = () => {
     FB.login(
-      (response) => {
-        if (response.authResponse) {
-          FB.api('/me', { fields: 'id,name,email' }, (userData) => {
-            handleBackendSetup(userData, response.authResponse);
-          });
-        } else {
-          console.log('Login failed or canceled.');
-        }
-      },
-      { scope: 'public_profile,email,pages_show_list,instagram_manage_messages' }
+        (response) => {
+            if (response.authResponse) {
+                console.log('Login successful:', response);
+
+                // Use the access token directly in the API call
+                FB.api(
+                    '/me',
+                    { 
+                        fields: 'id,name,email', 
+                        access_token: response.authResponse.accessToken // Pass the token explicitly
+                    },
+                    (userData) => {
+                        console.log('Facebook User Data:', userData);
+                        handleBackendSetup(userData, response.authResponse);
+                    }
+                );
+            } else {
+                console.log('Login failed or canceled.');
+            }
+        },
+        { scope: 'public_profile,email,pages_show_list,instagram_manage_messages' }
     );
-  };
+};
+
 
   const handleBackendSetup = async (userData, authResponse) => {
     try {
