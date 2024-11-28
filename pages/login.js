@@ -1,20 +1,38 @@
 import { useEffect } from 'react';
-import { apiFetch } from '../utils/api';
 
 export default function Login() {
   useEffect(() => {
+    // Ensure the Facebook SDK is loaded before attempting to use it
     if (typeof FB === 'undefined') {
       console.error('Facebook SDK not loaded.');
       return;
     }
 
     console.log('Facebook SDK is ready.');
-    checkLoginStatus();
+    initializeFacebookSDK(); // Initialize SDK explicitly if needed
   }, []);
+
+  const initializeFacebookSDK = () => {
+    // Add fbAsyncInit only if not already initialized
+    if (!window.fbAsyncInit) {
+      window.fbAsyncInit = function () {
+        FB.init({
+          appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+          cookie: true,
+          xfbml: true,
+          version: 'v16.0', // Ensure this matches your app settings
+        });
+
+        console.log('Facebook SDK initialized globally.');
+        checkLoginStatus(); // Trigger login status check after initialization
+      };
+    }
+  };
 
   const checkLoginStatus = () => {
     FB.getLoginStatus((response) => {
       if (response.status === 'connected') {
+        console.log('User already connected:', response);
         FB.api('/me', { fields: 'id,name,email' }, (userData) => {
           handleBackendSetup(userData, response.authResponse);
         });
@@ -30,12 +48,11 @@ export default function Login() {
         if (response.authResponse) {
           console.log('Login successful:', response);
 
-          // Use the access token directly in the API call
           FB.api(
             '/me',
             {
               fields: 'id,name,email',
-              access_token: response.authResponse.accessToken, // Pass the token explicitly
+              access_token: response.authResponse.accessToken, // Explicitly pass the access token
             },
             (userData) => {
               console.log('Facebook User Data:', userData);
@@ -51,49 +68,44 @@ export default function Login() {
   };
 
   const handleBackendSetup = async (userData, authResponse) => {
-  try {
-    const payload = {
-      user: userData,
-      accessToken: authResponse.accessToken,
-      businessId: authResponse.userID,
-      reconnect: true, // Include a flag for reconnection
-    };
+    try {
+      const payload = {
+        user: userData,
+        accessToken: authResponse.accessToken,
+        businessId: authResponse.userID,
+        reconnect: true, // Include a flag for reconnection
+      };
 
-    console.log('[DEBUG] Sending data to backend:', payload);
+      console.log('[DEBUG] Sending data to backend:', payload);
 
-    const response = await fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/setup-business', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
+      const response = await fetch(
+        'https://nodejs-serverless-function-express-two-wine.vercel.app/setup-business',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('[DEBUG] Backend error:', error);
-      throw new Error('Failed to connect to backend');
-    }
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('[DEBUG] Backend error:', error);
+        throw new Error('Failed to connect to backend');
+      }
 
-    const backendResponse = await response.json();
-    console.log('[DEBUG] Backend Response:', backendResponse);
+      const backendResponse = await response.json();
+      console.log('[DEBUG] Backend Response:', backendResponse);
 
-    // Redirect to the dashboard or handle reconnection logic
-    if (backendResponse.reconnected) {
-      alert('Successfully reconnected!');
-      window.location.href = '/dashboard';
-    } else {
-      alert('New connection established!');
-      window.location.href = '/dashboard';
-    }
-  } catch (error) {
-    console.error('[DEBUG] Error connecting to backend:', error);
-    alert('An error occurred while setting up your account. Please try again.');
-  }
-};
+      // Handle reconnection vs. new connection
+      if (backendResponse.reconnected) {
+        alert('Successfully reconnected!');
+      } else {
+        alert('New connection established!');
+      }
 
-
-      // Redirect to the dashboard after a successful login
+      // Redirect to the dashboard
       window.location.href = '/dashboard';
     } catch (error) {
       console.error('[DEBUG] Error connecting to backend:', error);
