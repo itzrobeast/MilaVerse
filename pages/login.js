@@ -51,34 +51,47 @@ export default function Login() {
   };
 
   const handleBackendSetup = async (userData, authResponse) => {
-    try {
-      const payload = {
-        user: userData,
-        accessToken: authResponse.accessToken,
-        businessId: authResponse.userID,
-      };
+  try {
+    const payload = {
+      user: userData,
+      accessToken: authResponse.accessToken,
+      businessId: authResponse.userID,
+      reconnect: true, // Include a flag for reconnection
+    };
 
-      console.log('[DEBUG] Sending data to backend:', payload);
+    console.log('[DEBUG] Sending data to backend:', payload);
 
-      const response = await fetch(
-        'https://nodejs-serverless-function-express-two-wine.vercel.app/setup-business',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json', // Ensure the Content-Type header is included
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+    const response = await fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/setup-business', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
 
-      if (!response.ok) {
-        const error = await response.json();
-        console.error('[DEBUG] Backend error:', error);
-        throw new Error('Failed to connect to backend');
-      }
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('[DEBUG] Backend error:', error);
+      throw new Error('Failed to connect to backend');
+    }
 
-      const backendResponse = await response.json();
-      console.log('[DEBUG] Backend Response:', backendResponse);
+    const backendResponse = await response.json();
+    console.log('[DEBUG] Backend Response:', backendResponse);
+
+    // Redirect to the dashboard or handle reconnection logic
+    if (backendResponse.reconnected) {
+      alert('Successfully reconnected!');
+      window.location.href = '/dashboard';
+    } else {
+      alert('New connection established!');
+      window.location.href = '/dashboard';
+    }
+  } catch (error) {
+    console.error('[DEBUG] Error connecting to backend:', error);
+    alert('An error occurred while setting up your account. Please try again.');
+  }
+};
+
 
       // Redirect to the dashboard after a successful login
       window.location.href = '/dashboard';
