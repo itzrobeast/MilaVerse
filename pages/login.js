@@ -26,75 +26,67 @@ export default function Login() {
 
   const handleLogin = () => {
     FB.login(
-        (response) => {
-            if (response.authResponse) {
-                console.log('Login successful:', response);
+      (response) => {
+        if (response.authResponse) {
+          console.log('Login successful:', response);
 
-                // Use the access token directly in the API call
-                FB.api(
-                    '/me',
-                    { 
-                        fields: 'id,name,email', 
-                        access_token: response.authResponse.accessToken // Pass the token explicitly
-                    },
-                    (userData) => {
-                        console.log('Facebook User Data:', userData);
-                        handleBackendSetup(userData, response.authResponse);
-                    }
-                );
-            } else {
-                console.log('Login failed or canceled.');
+          // Use the access token directly in the API call
+          FB.api(
+            '/me',
+            {
+              fields: 'id,name,email',
+              access_token: response.authResponse.accessToken, // Pass the token explicitly
+            },
+            (userData) => {
+              console.log('Facebook User Data:', userData);
+              handleBackendSetup(userData, response.authResponse);
             }
-        },
-        { scope: 'public_profile,email,pages_show_list,instagram_manage_messages' }
-    );
-};
-
-const handleBackendSetup = async (userData, authResponse) => {
-  try {
-    const payload = {
-      user: userData,
-      accessToken: authResponse.accessToken,
-      businessId: authResponse.userID,
-    };
-
-    console.log('[DEBUG] Sending data to backend:', payload);
-
-    const response = await fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/setup-business', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json', // Ensure the Content-Type header is included
+          );
+        } else {
+          console.log('Login failed or canceled.');
+        }
       },
-      body: JSON.stringify(payload),
-    });
+      { scope: 'public_profile,email,pages_show_list,instagram_manage_messages' }
+    );
+  };
 
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('[DEBUG] Backend error:', error);
-      throw new Error('Failed to connect to backend');
+  const handleBackendSetup = async (userData, authResponse) => {
+    try {
+      const payload = {
+        user: userData,
+        accessToken: authResponse.accessToken,
+        businessId: authResponse.userID,
+      };
+
+      console.log('[DEBUG] Sending data to backend:', payload);
+
+      const response = await fetch(
+        'https://nodejs-serverless-function-express-two-wine.vercel.app/setup-business',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json', // Ensure the Content-Type header is included
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('[DEBUG] Backend error:', error);
+        throw new Error('Failed to connect to backend');
+      }
+
+      const backendResponse = await response.json();
+      console.log('[DEBUG] Backend Response:', backendResponse);
+
+      // Redirect to the dashboard after a successful login
+      window.location.href = '/dashboard';
+    } catch (error) {
+      console.error('[DEBUG] Error connecting to backend:', error);
+      alert('An error occurred while setting up your account. Please try again.');
     }
-
-    const backendResponse = await response.json();
-    console.log('[DEBUG] Backend Response:', backendResponse);
-
-    // Redirect to the dashboard after a successful login
-    window.location.href = '/dashboard';
-  } catch (error) {
-    console.error('[DEBUG] Error connecting to backend:', error);
-    alert('An error occurred while setting up your account. Please try again.');
-  }
-};
-
-
-    // Redirect to the dashboard after a successful login
-    window.location.href = '/dashboard';
-  } catch (error) {
-    console.error('[DEBUG] Error connecting to backend:', error);
-    alert('An error occurred while setting up your account. Please try again.');
-  }
-};
-
-
+  };
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
