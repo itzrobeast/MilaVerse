@@ -7,7 +7,6 @@ export default function Dashboard() {
 
   const userId = 'FB_USER_12345'; // Replace with the actual userId from your auth system
 
-  // Fetch business information
   useEffect(() => {
     const fetchBusiness = async () => {
       try {
@@ -29,17 +28,15 @@ export default function Dashboard() {
     fetchBusiness();
   }, [userId]);
 
-  // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setBusiness((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Save updated business information
   const handleSave = async () => {
     try {
       const response = await fetch('/api/update-business', {
-        method: 'POST',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(business),
       });
@@ -97,6 +94,19 @@ export default function Dashboard() {
               onChange={handleInputChange}
               className="w-full p-2 border rounded"
               rows="3"
+            />
+          </div>
+
+          {/* AI Knowledge */}
+          <div>
+            <label className="block font-semibold">AI Knowledge</label>
+            <textarea
+              name="ai_knowledge"
+              value={business.ai_knowledge || ''}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded"
+              rows="6"
+              placeholder="Enter business-specific knowledge for the AI assistant..."
             />
           </div>
 
