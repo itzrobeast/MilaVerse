@@ -20,7 +20,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchBusiness = async () => {
       try {
-        const response = await fetch(`/api/get-business?userId=${userId}`);
+        const response = await fetch(`/get-business?userId=${userId}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -45,7 +45,7 @@ export default function Dashboard() {
 
   const handleSave = async () => {
     try {
-      const response = await fetch('/api/update-business', {
+      const response = await fetch('/get-business', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(business),
