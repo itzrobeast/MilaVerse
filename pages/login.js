@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { getPlatform } from '../utils/platform';
 
 export default function Login() {
   useEffect(() => {
@@ -11,6 +12,8 @@ export default function Login() {
     console.log('Facebook SDK is ready.');
     initializeFacebookSDK(); // Initialize SDK explicitly if needed
   }, []);
+  
+  const platform = getPlatform();
 
   const initializeFacebookSDK = () => {
     // Add fbAsyncInit only if not already initialized
