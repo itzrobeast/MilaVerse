@@ -78,10 +78,12 @@ export default function Login() {
       
       const payload = {
         user: userData,
-        accessToken: authResponse.accessToken,
-        businessId: authResponse.userID,
+        accessToken: authResponse.accessToken, pageAccessToken,
+        businessId: authResponse.userID, 
         reconnect: true, // Include a flag for reconnection
         platform,
+        pageId: selectedPageId,
+        locations: [],
         appId: 'milaVerse',
         businessName: userData.name,
         ownerName: userData.name,
