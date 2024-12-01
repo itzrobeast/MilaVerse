@@ -66,72 +66,56 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-4xl font-bold mb-4">Welcome to the Dashboard</h1>
-      <p className="text-lg text-gray-600 mb-6">Manage your business settings below.</p>
+    <div className="min-h-screen bg-gray-100 p-4">
+  <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6">
+    <h1 className="text-2xl font-bold mb-4">Welcome to the Dashboard</h1>
+    <p className="text-gray-600 mb-6">Manage your business settings below.</p>
+    
+    <form className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Business Name</label>
+        <input
+          type="text"
+          placeholder="Enter your business name"
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        />
+      </div>
 
-      {loading && <p>Loading business information...</p>}
-      {error && <p className="text-red-500">{error}</p>}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Contact Email</label>
+        <input
+          type="email"
+          placeholder="Enter contact email"
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        />
+      </div>
 
-      {business && (
-        <div className="space-y-4">
-          {/* Business Name */}
-          <div>
-            <label className="block font-semibold">Business Name</label>
-            <input
-              type="text"
-              name="name"
-              value={business.name || ''}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-            />
-          </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Locations</label>
+        <textarea
+          placeholder="Add locations"
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        ></textarea>
+      </div>
 
-          {/* Contact Email */}
-          <div>
-            <label className="block font-semibold">Contact Email</label>
-            <input
-              type="email"
-              name="contact_email"
-              value={business.contact_email || ''}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-            />
-          </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">AI Knowledge</label>
+        <textarea
+          placeholder="Enter AI-specific knowledge"
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        ></textarea>
+      </div>
 
-          {/* Locations */}
-          <div>
-            <label className="block font-semibold">Locations</label>
-            <textarea
-              name="locations"
-              value={JSON.stringify(business.locations || [])}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              rows="3"
-            />
-          </div>
+      <button
+        type="submit"
+        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700"
+      >
+        Save Changes
+      </button>
+    </form>
+  </div>
+</div>
 
-          {/* AI Knowledge */}
-          <div>
-            <label className="block font-semibold">AI Knowledge</label>
-            <textarea
-              name="ai_knowledge"
-              value={business.ai_knowledge_base || ''}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              rows="6"
-              placeholder="Enter business-specific knowledge for the AI assistant..."
-            />
-          </div>
-
-          {/* Save Button */}
-          <button
-            onClick={handleSave}
-            className="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600"
-          >
-            Save Changes
-          </button>
-        </div>
       )}
 
       {!business && !loading && (
