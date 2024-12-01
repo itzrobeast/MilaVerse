@@ -6,7 +6,7 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
 
   // Dynamically retrieve userId from session or local storage
-  const userId = localStorage.getItem('userId'); // Assuming you store userId in localStorage
+  const userId = localStorage.getItem('userId'); // Ensure userId is stored after login
 
   useEffect(() => {
     if (!userId) {
@@ -17,7 +17,7 @@ export default function Dashboard() {
 
     const fetchBusiness = async () => {
       try {
-        const response = await fetch(`/api/get-business?userId=${userId}`);
+        const response = await fetch(`https://nodejs-serverless-function-express-two-wine.vercel.app/get-business?userId=${userId}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -42,7 +42,7 @@ export default function Dashboard() {
 
   const handleSave = async () => {
     try {
-      const response = await fetch('/api/update-business', { // Corrected the endpoint
+      const response = await fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/update-business', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(business),
@@ -109,7 +109,7 @@ export default function Dashboard() {
           <div>
             <label className="block font-semibold">AI Knowledge</label>
             <textarea
-              name="ai_knowledge_base" // Use the correct field name
+              name="ai_knowledge_base" // Updated to match backend schema
               value={business.ai_knowledge_base || ''}
               onChange={handleInputChange}
               className="w-full p-2 border rounded"
