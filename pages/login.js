@@ -73,7 +73,7 @@ export default function Login() {
           if (pageAccessToken && selectedPageId) {
             console.log('Page Access Token:', pageAccessToken);
             console.log('Selected Page ID:', selectedPageId);
-            localStorage.setItem('userId', userData.id); // Store userId
+            localStorage.setItem('userId', userData.id); // Store userId locally
             handleBackendSetup(userData, userAccessToken, pageAccessToken, selectedPageId);
           } else {
             console.error('No page access token or page ID found.');
@@ -108,6 +108,7 @@ export default function Login() {
 
       console.log('[DEBUG] Sending data to backend:', payload);
 
+      // Adjusting endpoint assuming no `/api` folder
       const response = await fetch('/setup-business', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
