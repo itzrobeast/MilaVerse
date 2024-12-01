@@ -61,7 +61,7 @@ export default function Dashboard() {
     e.preventDefault(); // Prevent form submission default behavior
     try {
       const response = await fetch(
-        "https://nodejs-serverless-function-express-two-wine.vercel.app/update-business",
+        "https://nodejs-serverless-function-express-two-wine.vercel.app/get-business",
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
