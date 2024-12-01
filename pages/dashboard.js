@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 
 export default function Dashboard() {
@@ -15,9 +16,11 @@ export default function Dashboard() {
       return;
     }
 
+
+  useEffect(() => {
     const fetchBusiness = async () => {
       try {
-        const response = await fetch(`https://nodejs-serverless-function-express-two-wine.vercel.app/get-business?userId=${userId}`);
+        const response = await fetch(`/api/get-business?userId=${userId}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -42,15 +45,14 @@ export default function Dashboard() {
 
   const handleSave = async () => {
     try {
-      const response = await fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/update-business', {
+      const response = await fetch('/api/update-business', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(business),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update business information');
+        throw new Error('Failed to update business information');
       }
 
       alert('Business information updated successfully!');
@@ -109,7 +111,7 @@ export default function Dashboard() {
           <div>
             <label className="block font-semibold">AI Knowledge</label>
             <textarea
-              name="ai_knowledge_base" // Updated to match backend schema
+              name="ai_knowledge"
               value={business.ai_knowledge_base || ''}
               onChange={handleInputChange}
               className="w-full p-2 border rounded"
