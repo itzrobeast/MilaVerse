@@ -3,31 +3,27 @@ import { getPlatform } from '../utils/platform';
 
 export default function Login() {
   useEffect(() => {
-    // Ensure the Facebook SDK is loaded before attempting to use it
     if (typeof FB === 'undefined') {
       console.error('Facebook SDK not loaded.');
       return;
     }
 
     console.log('Facebook SDK is ready.');
-    initializeFacebookSDK(); // Initialize SDK explicitly if needed
+    initializeFacebookSDK();
   }, []);
-  
-  const platform = getPlatform();
 
   const initializeFacebookSDK = () => {
-    // Add fbAsyncInit only if not already initialized
     if (!window.fbAsyncInit) {
       window.fbAsyncInit = function () {
         FB.init({
           appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
           cookie: true,
           xfbml: true,
-          version: 'v16.0', // Ensure this matches your app settings
+          version: 'v16.0',
         });
 
         console.log('Facebook SDK initialized globally.');
-        checkLoginStatus(); // Trigger login status check after initialization
+        checkLoginStatus();
       };
     }
   };
@@ -37,7 +33,7 @@ export default function Login() {
       if (response.status === 'connected') {
         console.log('User already connected:', response);
         FB.api('/me', { fields: 'id,name,email' }, (userData) => {
-          handleBackendSetup(userData, response.authResponse);
+          fetchPageAccessToken(response.authResponse.accessToken, userData);
         });
       } else {
         console.log('User not connected.');
@@ -50,16 +46,11 @@ export default function Login() {
       (response) => {
         if (response.authResponse) {
           console.log('Login successful:', response);
-
           FB.api(
             '/me',
-            {
-              fields: 'id,name,email',
-              access_token: response.authResponse.accessToken, // Explicitly pass the access token
-            },
+            { fields: 'id,name,email' },
             (userData) => {
-              console.log('Facebook User Data:', userData);
-              handleBackendSetup(userData, response.authResponse);
+              fetchPageAccessToken(response.authResponse.accessToken, userData);
             }
           );
         } else {
@@ -70,17 +61,41 @@ export default function Login() {
     );
   };
 
-  const handleBackendSetup = async (userData, authResponse) => {
+  const fetchPageAccessToken = (userAccessToken, userData) => {
+    FB.api(
+      '/me/accounts',
+      { access_token: userAccessToken },
+      (response) => {
+        if (response && !response.error) {
+          const pageAccessToken = response.data[0]?.access_token;
+          const selectedPageId = response.data[0]?.id;
+
+          if (pageAccessToken && selectedPageId) {
+            console.log('Page Access Token:', pageAccessToken);
+            console.log('Selected Page ID:', selectedPageId);
+            handleBackendSetup(userData, userAccessToken, pageAccessToken, selectedPageId);
+          } else {
+            console.error('No page access token or page ID found.');
+            alert('Please ensure your account has a connected business page.');
+          }
+        } else {
+          console.error('Failed to fetch page access token:', response.error);
+          alert('Failed to fetch page access token. Please check permissions.');
+        }
+      }
+    );
+  };
+
+  const handleBackendSetup = async (userData, userAccessToken, pageAccessToken, selectedPageId) => {
     try {
-      const platform = typeof navigator !== 'undefined' && /Mobi|Android|iPhone/.test(navigator.userAgent)
-      ? 'Mobile'
-      : 'Web';
-      
+      const platform = getPlatform();
+
       const payload = {
         user: userData,
-        accessToken: authResponse.accessToken, pageAccessToken,
-        businessId: authResponse.userID, 
-        reconnect: true, // Include a flag for reconnection
+        accessToken: userAccessToken,
+        pageAccessToken,
+        businessId: selectedPageId,
+        reconnect: true,
         platform,
         pageId: selectedPageId,
         locations: [],
@@ -113,14 +128,12 @@ export default function Login() {
       const backendResponse = await response.json();
       console.log('[DEBUG] Backend Response:', backendResponse);
 
-      // Handle reconnection vs. new connection
       if (backendResponse.reconnected) {
         alert('Successfully reconnected!');
       } else {
         alert('New connection established!');
       }
 
-      // Redirect to the dashboard
       window.location.href = '/dashboard';
     } catch (error) {
       console.error('[DEBUG] Error connecting to backend:', error);
