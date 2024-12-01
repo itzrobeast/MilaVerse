@@ -108,8 +108,8 @@ export default function Login() {
 
       console.log('[DEBUG] Sending data to backend:', payload);
 
-      // Adjusting endpoint assuming no `/api` folder
-      const response = await fetch('/setup-business', {
+      // Use the correct backend URL here
+      const response = await fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/setup-business', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
