@@ -42,14 +42,15 @@ export default function Dashboard() {
 
   const handleSave = async () => {
     try {
-      const response = await fetch('/api/get-business', {
+      const response = await fetch('/api/update-business', { // Corrected the endpoint
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(business),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update business information');
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update business information');
       }
 
       alert('Business information updated successfully!');
@@ -108,8 +109,8 @@ export default function Dashboard() {
           <div>
             <label className="block font-semibold">AI Knowledge</label>
             <textarea
-              name="ai_knowledge"
-              value={business.ai_knowledge || ''}
+              name="ai_knowledge_base" // Use the correct field name
+              value={business.ai_knowledge_base || ''}
               onChange={handleInputChange}
               className="w-full p-2 border rounded"
               rows="6"
