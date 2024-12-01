@@ -5,9 +5,16 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const userId = 'FB_USER_12345'; // Replace with the actual userId from your auth system
+  // Dynamically retrieve userId from session or local storage
+  const userId = localStorage.getItem('userId'); // Assuming you store userId in localStorage
 
   useEffect(() => {
+    if (!userId) {
+      setError('User not logged in');
+      setLoading(false);
+      return;
+    }
+
     const fetchBusiness = async () => {
       try {
         const response = await fetch(`/api/get-business?userId=${userId}`);
@@ -35,7 +42,7 @@ export default function Dashboard() {
 
   const handleSave = async () => {
     try {
-      const response = await fetch('/api/update-business', {
+      const response = await fetch('/api/get-business', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(business),
