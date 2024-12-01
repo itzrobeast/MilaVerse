@@ -55,10 +55,15 @@ export default function Dashboard() {
     const { name, value } = e.target;
     setBusiness((prev) => ({ ...prev, [name]: value }));
   };
+  
+  useEffect(() => {
+    console.log("Business state updated:", business);
+  }, [business]);
 
   // Save changes to the backend
   const handleSave = async (e) => {
     e.preventDefault(); // Prevent form submission default behavior
+    console.log("Saving business info:", business); // Log the payload
     try {
       const response = await fetch(
         "https://nodejs-serverless-function-express-two-wine.vercel.app/get-business",
