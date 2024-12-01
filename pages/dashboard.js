@@ -63,14 +63,20 @@ export default function Dashboard() {
   // Save changes to the backend
   const handleSave = async (e) => {
     e.preventDefault(); // Prevent form submission default behavior
-    console.log("Saving business info:", business); // Log the payload
+    console.log("AI Knowledge being sent:", business.aiKnowledge); // Log the payload
     try {
       const response = await fetch(
         "https://nodejs-serverless-function-express-two-wine.vercel.app/get-business",
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(business),
+          body: JSON.stringify({
+            id: userId, // Assuming you have the userId or business id available
+            name: business.name,
+            contact_email: business.email,
+            locations: business.locations,
+            ai_knowledge_base: business.aiKnowledge,
+          }), 
         }
       );
 
