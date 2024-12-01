@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 
 export default function Dashboard() {
@@ -6,8 +5,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Dynamically retrieve userId from session or local storage
-  const userId = localStorage.getItem('userId'); // Ensure userId is stored after login
+  const userId = localStorage.getItem('userId'); // Retrieve userId stored after login
 
   useEffect(() => {
     if (!userId) {
@@ -16,8 +14,6 @@ export default function Dashboard() {
       return;
     }
 
-
-  useEffect(() => {
     const fetchBusiness = async () => {
       try {
         const response = await fetch(`/get-business?userId=${userId}`);
@@ -71,7 +67,6 @@ export default function Dashboard() {
 
       {business && (
         <div className="space-y-4">
-          {/* Business Name */}
           <div>
             <label className="block font-semibold">Business Name</label>
             <input
@@ -83,7 +78,6 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* Contact Email */}
           <div>
             <label className="block font-semibold">Contact Email</label>
             <input
@@ -95,7 +89,6 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* Locations */}
           <div>
             <label className="block font-semibold">Locations</label>
             <textarea
@@ -107,11 +100,10 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* AI Knowledge */}
           <div>
             <label className="block font-semibold">AI Knowledge</label>
             <textarea
-              name="ai_knowledge"
+              name="ai_knowledge_base"
               value={business.ai_knowledge_base || ''}
               onChange={handleInputChange}
               className="w-full p-2 border rounded"
@@ -120,7 +112,6 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* Save Button */}
           <button
             onClick={handleSave}
             className="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600"
