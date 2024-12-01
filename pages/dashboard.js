@@ -4,19 +4,27 @@ export default function Dashboard() {
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const userId = localStorage.getItem('userId'); // Retrieve userId stored after login
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-    if (!userId) {
-      setError('User not logged in');
-      setLoading(false);
-      return;
+    // Only access localStorage on the client side
+    if (typeof window !== 'undefined') {
+      const storedUserId = localStorage.getItem('userId');
+      if (storedUserId) {
+        setUserId(storedUserId);
+      } else {
+        setError('User not logged in');
+        setLoading(false);
+      }
     }
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
 
     const fetchBusiness = async () => {
       try {
-        const response = await fetch(`/get-business?userId=${userId}`);
+        const response = await fetch(`/api/get-business?userId=${userId}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -41,7 +49,7 @@ export default function Dashboard() {
 
   const handleSave = async () => {
     try {
-      const response = await fetch('/get-business', {
+      const response = await fetch('/api/update-business', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(business),
@@ -67,6 +75,7 @@ export default function Dashboard() {
 
       {business && (
         <div className="space-y-4">
+          {/* Business Name */}
           <div>
             <label className="block font-semibold">Business Name</label>
             <input
@@ -78,6 +87,7 @@ export default function Dashboard() {
             />
           </div>
 
+          {/* Contact Email */}
           <div>
             <label className="block font-semibold">Contact Email</label>
             <input
@@ -89,6 +99,7 @@ export default function Dashboard() {
             />
           </div>
 
+          {/* Locations */}
           <div>
             <label className="block font-semibold">Locations</label>
             <textarea
@@ -100,10 +111,11 @@ export default function Dashboard() {
             />
           </div>
 
+          {/* AI Knowledge */}
           <div>
             <label className="block font-semibold">AI Knowledge</label>
             <textarea
-              name="ai_knowledge_base"
+              name="ai_knowledge"
               value={business.ai_knowledge_base || ''}
               onChange={handleInputChange}
               className="w-full p-2 border rounded"
@@ -112,6 +124,7 @@ export default function Dashboard() {
             />
           </div>
 
+          {/* Save Button */}
           <button
             onClick={handleSave}
             className="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600"
