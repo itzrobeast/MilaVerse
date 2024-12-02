@@ -6,6 +6,9 @@ export default function Dashboard() {
     email: "",
     locations: "",
     aiKnowledge: "",
+    objections: "",
+    insurancePolicies: "",
+    pageId: "", // Read-only
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,7 +41,11 @@ export default function Dashboard() {
         const data = await response.json();
 
         if (response.ok && isMounted) {
-          setBusiness(data);
+          setBusiness({
+            ...data,
+            objections: JSON.stringify(data.objections || {}, null, 2),
+            insurancePolicies: JSON.stringify(data.insurance_policies || {}, null, 2),
+          });
         } else if (isMounted) {
           setError(data.error || "Failed to fetch business information.");
         }
@@ -64,25 +71,20 @@ export default function Dashboard() {
     setBusiness((prev) => ({ ...prev, [name]: value }));
   };
 
-  useEffect(() => {
-    console.log("Business state updated:", business); // Debug log
-  }, [business]);
-
   // Save changes to the backend
   const handleSave = async (e) => {
     e.preventDefault(); // Prevent form submission default behavior
-    console.log("Sending AI Knowledge:", business.aiKnowledge); // Log the payload
 
     try {
       const payload = {
-        owner_id: userId, // Assuming userId is correctly set
+        owner_id: userId, // Use userId for owner_id
         name: business.name,
         contact_email: business.email,
-        locations: business.locations || "", // Ensure it's a string
-        ai_knowledge_base: business.aiKnowledge || "", // Ensure it's a string
+        locations: business.locations || "",
+        ai_knowledge_base: business.aiKnowledge || "",
+        objections: JSON.parse(business.objections || "{}"),
+        insurance_policies: JSON.parse(business.insurancePolicies || "{}"),
       };
-
-      console.log("Payload being sent:", payload); // Log payload before sending
 
       const response = await fetch(
         "https://nodejs-serverless-function-express-two-wine.vercel.app/get-business",
@@ -170,6 +172,45 @@ export default function Dashboard() {
               onChange={handleInputChange}
               placeholder="Enter AI-specific knowledge"
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Objections
+            </label>
+            <textarea
+              name="objections"
+              value={business.objections || ""}
+              onChange={handleInputChange}
+              placeholder="Enter objections as JSON"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Insurance Policies
+            </label>
+            <textarea
+              name="insurancePolicies"
+              value={business.insurancePolicies || ""}
+              onChange={handleInputChange}
+              placeholder="Enter insurance policies as JSON"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Page ID (Read Only)
+            </label>
+            <input
+              type="text"
+              name="pageId"
+              value={business.pageId || ""}
+              readOnly
+              className="mt-1 block w-full border border-gray-300 bg-gray-100 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
           </div>
 
