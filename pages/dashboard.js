@@ -183,7 +183,7 @@ export default function Dashboard() {
               name="objections"
               value={business.objections || ""}
               onChange={handleInputChange}
-              placeholder="Enter objections as JSON"
+              placeholder="Enter objections (e.g., 'Too expensive, Not covered by insurance')"
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
           </div>
@@ -196,7 +196,7 @@ export default function Dashboard() {
               name="insurancePolicies"
               value={business.insurancePolicies || ""}
               onChange={handleInputChange}
-              placeholder="Enter insurance policies as JSON"
+              placeholder="Enter insurance policies (e.g., 'Blue Cross, United Health')"
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
           </div>
