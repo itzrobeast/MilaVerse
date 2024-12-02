@@ -113,12 +113,12 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-r from-blue-900 to-purple-600 text-white">
       <header className="text-center py-10">
         <img
-          src="/path-to-logo/milaverse2.webp" // Update with the actual path to your logo
+          src="/milaverse2.webp" // Update with the actual path to your logo
           alt="Milaverse Logo"
           className="mx-auto w-32 h-32"
         />
-        <h1 className="text-4xl font-bold mt-4">Welcome to the Dashboard</h1>
-        <p className="text-xl mt-2">Manage your business settings below.</p>
+        <h1 className="text-4xl font-bold mt-4 text-gray-800">Welcome to the Dashboard</h1>
+        <p className="text-xl mt-2 text-gray-600">Manage your business settings below.</p>
       </header>
 
       <div className="max-w-4xl mx-auto bg-white text-gray-900 shadow-lg rounded-lg p-8">
