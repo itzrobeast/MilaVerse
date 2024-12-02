@@ -75,7 +75,7 @@ export default function Dashboard() {
 
     try {
       const payload = {
-        id: userId, // Assuming userId is correctly set
+        owner_id: userId, // Assuming userId is correctly set
         name: business.name,
         contact_email: business.email,
         locations: business.locations || "", // Ensure it's a string
