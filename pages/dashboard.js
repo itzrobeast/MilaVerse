@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
   const [userId, setUserId] = useState(null);
 
+  // Load user ID from localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedUserId = localStorage.getItem("userId");
@@ -26,6 +27,7 @@ export default function Dashboard() {
     }
   }, []);
 
+  // Fetch business data once user ID is available
   useEffect(() => {
     let isMounted = true;
 
@@ -63,11 +65,13 @@ export default function Dashboard() {
     };
   }, [userId]);
 
+  // Handle input changes dynamically
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setBusiness((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Save changes to the backend
   const handleSave = async (e) => {
     e.preventDefault();
 
@@ -80,6 +84,7 @@ export default function Dashboard() {
         ai_knowledge_base: business.aiKnowledge || "",
         objections: business.objections || "",
         insurance_policies: business.insurancePolicies || "",
+        page_id: business.pageId || "", // Read-only, include if relevant
       };
 
       const response = await fetch(
@@ -101,6 +106,7 @@ export default function Dashboard() {
     }
   };
 
+  // Render loading or error states
   if (loading) {
     return <p className="text-gray-600">Loading...</p>;
   }
@@ -110,101 +116,102 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-900 to-purple-600 text-white">
-      <header className="text-center py-10">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-700 to-pink-500 text-white">
+      <header className="py-10 text-center">
         <img
-          src="/milaverse2.webp" // Update with the actual path to your logo
+          src="/milaverse2.webp" // Update with the correct path to your logo
           alt="Milaverse Logo"
           className="mx-auto w-32 h-32"
         />
-        <h1 className="text-4xl font-bold mt-4 text-gray-800">Welcome to the Dashboard</h1>
-        <p className="text-xl mt-2 text-gray-600">Manage your business settings below.</p>
+        <h1 className="text-4xl font-bold mt-4">Welcome to Milaverse</h1>
+        <p className="text-lg mt-2 opacity-90">Your AI-powered business management dashboard</p>
       </header>
 
-      <div className="max-w-4xl mx-auto bg-white text-gray-900 shadow-lg rounded-lg p-8">
+      <div className="max-w-4xl mx-auto bg-white text-gray-800 shadow-lg rounded-xl p-8">
+        <h2 className="text-2xl font-bold mb-6 text-center">Manage Business Settings</h2>
         <form className="space-y-6" onSubmit={handleSave}>
           <div>
-            <label className="block text-sm font-medium mb-1">Business Name</label>
+            <label className="block text-sm font-medium">Business Name</label>
             <input
               type="text"
               name="name"
               value={business.name || ""}
               onChange={handleInputChange}
               placeholder="Enter your business name"
-              className="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Contact Email</label>
+            <label className="block text-sm font-medium">Contact Email</label>
             <input
               type="email"
               name="email"
               value={business.email || ""}
               onChange={handleInputChange}
               placeholder="Enter contact email"
-              className="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Locations</label>
+            <label className="block text-sm font-medium">Locations</label>
             <textarea
               name="locations"
               value={business.locations || ""}
               onChange={handleInputChange}
               placeholder="Enter locations"
-              className="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">AI Knowledge</label>
+            <label className="block text-sm font-medium">AI Knowledge</label>
             <textarea
               name="aiKnowledge"
               value={business.aiKnowledge || ""}
               onChange={handleInputChange}
               placeholder="Enter AI-specific knowledge"
-              className="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Objections</label>
+            <label className="block text-sm font-medium">Objections</label>
             <textarea
               name="objections"
               value={business.objections || ""}
               onChange={handleInputChange}
               placeholder="Enter objections"
-              className="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Insurance Policies</label>
+            <label className="block text-sm font-medium">Insurance Policies</label>
             <textarea
               name="insurancePolicies"
               value={business.insurancePolicies || ""}
               onChange={handleInputChange}
               placeholder="Enter insurance policies"
-              className="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Page ID (Read Only)</label>
+            <label className="block text-sm font-medium">Page ID (Read Only)</label>
             <input
               type="text"
               name="pageId"
               value={business.pageId || ""}
               readOnly
-              className="w-full px-4 py-2 border bg-gray-200 rounded-md shadow-sm focus:outline-none"
+              className="w-full px-4 py-2 border bg-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
           >
             Save Changes
           </button>
