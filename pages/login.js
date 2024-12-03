@@ -13,28 +13,24 @@ export default function Login() {
   }, []);
 
   const initializeFacebookSDK = () => {
-    if (!window.fbAsyncInit) {
-      window.fbAsyncInit = function () {
-        FB.init({
-          appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
-          cookie: true,
-          xfbml: true,
-          version: 'v16.0',
-        });
+    window.fbAsyncInit = function () {
+      FB.init({
+        appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+        cookie: true,
+        xfbml: true,
+        version: 'v16.0',
+      });
 
-        console.log('Facebook SDK initialized globally.');
-        checkLoginStatus();
-      };
-    }
+      console.log('Facebook SDK initialized globally.');
+      checkLoginStatus();
+    };
   };
 
   const checkLoginStatus = () => {
     FB.getLoginStatus((response) => {
       if (response.status === 'connected') {
         console.log('User already connected:', response);
-        FB.api('/me', { fields: 'id,name,email' }, (userData) => {
-          fetchPageAccessToken(response.authResponse.accessToken, userData);
-        });
+        fetchUserDetails(response.authResponse);
       } else {
         console.log('User not connected.');
       }
@@ -46,48 +42,41 @@ export default function Login() {
       (response) => {
         if (response.authResponse) {
           console.log('Login successful:', response);
-          FB.api(
-            '/me',
-            { fields: 'id,name,email' },
-            (userData) => {
-              fetchPageAccessToken(response.authResponse.accessToken, userData);
-            }
-          );
+          fetchUserDetails(response.authResponse);
         } else {
           console.log('Login failed or canceled.');
         }
       },
-      { scope: 'public_profile,email,pages_show_list,instagram_manage_messages,business_management,instagram_basic' }
+      {
+        scope: 'public_profile,email,pages_show_list,instagram_manage_messages,business_management,instagram_basic',
+      }
     );
   };
 
-  const accessToken = response.authResponse.accessToken;
-    const fbId = response.authResponse.userID;
+  const fetchUserDetails = (authResponse) => {
+    const accessToken = authResponse.accessToken;
+    const fbId = authResponse.userID;
 
-    // Fetch Instagram ID if needed
+    FB.api('/me', { fields: 'id,name,email' }, (userData) => {
+      console.log('Facebook User Data:', userData);
+      fetchInstagramId(fbId, accessToken, userData);
+    });
+  };
+
+  const fetchInstagramId = (fbId, accessToken, userData) => {
     fetch(`/get-instagram-id?fbId=${fbId}&accessToken=${accessToken}`)
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         console.log('Instagram ID:', data.igId);
 
         // Send both IDs to the backend
-        fetch('/setup-business', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user: { id: fbId, name: 'User Name', email: 'user@example.com' },
-            accessToken,
-            igId: data.igId,
-          }),
-        }).then(res => console.log('Backend response:', res));
+        handleBackendSetup(userData, accessToken, data.igId);
+      })
+      .catch((error) => {
+        console.error('Error fetching Instagram ID:', error);
+        alert('Unable to retrieve Instagram account. Please check your permissions.');
       });
-  } else {
-    console.error('FB Login failed:', response);
-  }
-}, { scope: 'email,public_profile,instagram_basic' });
-
-
-
+  };
 
   const fetchPageAccessToken = (userAccessToken, userData) => {
     FB.api(
@@ -102,7 +91,7 @@ export default function Login() {
             console.log('Page Access Token:', pageAccessToken);
             console.log('Selected Page ID:', selectedPageId);
             localStorage.setItem('userId', userData.id); // Store userId locally
-            handleBackendSetup(userData, userAccessToken, pageAccessToken, selectedPageId);
+            handleBackendSetup(userData, userAccessToken, null, pageAccessToken, selectedPageId);
           } else {
             console.error('No page access token or page ID found.');
             alert('Please ensure your account has a connected business page.');
@@ -115,7 +104,7 @@ export default function Login() {
     );
   };
 
-  const handleBackendSetup = async (userData, userAccessToken, pageAccessToken, selectedPageId) => {
+  const handleBackendSetup = async (userData, userAccessToken, igId, pageAccessToken = null, selectedPageId = null) => {
     try {
       const platform = getPlatform();
 
@@ -124,6 +113,7 @@ export default function Login() {
         accessToken: userAccessToken,
         pageAccessToken,
         businessId: selectedPageId,
+        igId,
         reconnect: true,
         platform,
         pageId: selectedPageId,
@@ -136,7 +126,6 @@ export default function Login() {
 
       console.log('[DEBUG] Sending data to backend:', payload);
 
-      // Use the correct backend URL here
       const response = await fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/setup-business', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
