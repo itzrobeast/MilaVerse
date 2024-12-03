@@ -116,20 +116,27 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-700 to-pink-500 text-white">
-      <header className="py-10 text-center">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+      {/* Header */}
+      <header className="py-10 text-center bg-white text-gray-800">
         <img
-          src="/milaverse2.webp" // Update with the correct path to your logo
+          src="/milaverse2.webp"
           alt="Milaverse Logo"
-          className="mx-auto w-32 h-32"
+          className="mx-auto w-full max-w-[300px] h-auto"
         />
-        <h1 className="text-4xl font-bold mt-4">Welcome to Milaverse</h1>
-        <p className="text-lg mt-2 opacity-90">Your AI-powered business management dashboard</p>
+        <h1 className="text-4xl font-bold mt-4">MilaVerse</h1>
+        <p className="text-lg mt-2 opacity-90">
+          Your AI-powered business management dashboard
+        </p>
       </header>
 
-      <div className="max-w-4xl mx-auto bg-white text-gray-800 shadow-lg rounded-xl p-8">
-        <h2 className="text-2xl font-bold mb-6 text-center">Manage Business Settings</h2>
+      {/* Dashboard Form */}
+      <div className="max-w-4xl mx-auto bg-white text-gray-800 shadow-lg rounded-xl p-8 mt-8">
+        <h2 className="text-2xl font-bold mb-6 text-center">
+          Manage Business Settings
+        </h2>
         <form className="space-y-6" onSubmit={handleSave}>
+          {/* Business Name */}
           <div>
             <label className="block text-sm font-medium">Business Name</label>
             <input
@@ -142,6 +149,7 @@ export default function Dashboard() {
             />
           </div>
 
+          {/* Contact Email */}
           <div>
             <label className="block text-sm font-medium">Contact Email</label>
             <input
@@ -154,6 +162,7 @@ export default function Dashboard() {
             />
           </div>
 
+          {/* Locations */}
           <div>
             <label className="block text-sm font-medium">Locations</label>
             <textarea
@@ -165,6 +174,7 @@ export default function Dashboard() {
             />
           </div>
 
+          {/* AI Knowledge */}
           <div>
             <label className="block text-sm font-medium">AI Knowledge</label>
             <textarea
@@ -176,6 +186,7 @@ export default function Dashboard() {
             />
           </div>
 
+          {/* Objections */}
           <div>
             <label className="block text-sm font-medium">Objections</label>
             <textarea
@@ -187,6 +198,7 @@ export default function Dashboard() {
             />
           </div>
 
+          {/* Insurance Policies */}
           <div>
             <label className="block text-sm font-medium">Insurance Policies</label>
             <textarea
@@ -198,6 +210,7 @@ export default function Dashboard() {
             />
           </div>
 
+          {/* Page ID */}
           <div>
             <label className="block text-sm font-medium">Page ID (Read Only)</label>
             <input
@@ -209,6 +222,7 @@ export default function Dashboard() {
             />
           </div>
 
+          {/* Save Button */}
           <button
             type="submit"
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
