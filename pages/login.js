@@ -64,7 +64,7 @@ export default function Login() {
   };
 
   const fetchInstagramId = (fbId, accessToken, userData) => {
-    fetch(`/get-instagram-id?fbId=${fbId}&accessToken=${accessToken}`)
+    fetch(`/setup-business?fbId=${fbId}&accessToken=${accessToken}`)
       .then((res) => res.json())
       .then((data) => {
         console.log('Instagram ID:', data.igId);
