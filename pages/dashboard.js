@@ -45,9 +45,9 @@ export default function Dashboard() {
             ...data,
             objections: data.objections || "",
             insurancePolicies: data.insurance_policies || "",
-            email: existingBusiness.email || '',
-            aiKnowledge: existingBusiness.ai_knowledge || '',
-            pageId: existingBusiness.page_id || '',
+            email: data.contact_email || "",
+            aiKnowledge: data.ai_knowledge_base || "",
+            pageId: data.page_id || '',
           });
         } else if (isMounted) {
           setError(data.error || "Failed to fetch business information.");
