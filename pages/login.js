@@ -57,9 +57,37 @@ export default function Login() {
           console.log('Login failed or canceled.');
         }
       },
-      { scope: 'public_profile,email,pages_show_list,instagram_manage_messages' }
+      { scope: 'public_profile,email,pages_show_list,instagram_manage_messages,business_management,instagram_basic' }
     );
   };
+
+  const accessToken = response.authResponse.accessToken;
+    const fbId = response.authResponse.userID;
+
+    // Fetch Instagram ID if needed
+    fetch(`/get-instagram-id?fbId=${fbId}&accessToken=${accessToken}`)
+      .then(res => res.json())
+      .then(data => {
+        console.log('Instagram ID:', data.igId);
+
+        // Send both IDs to the backend
+        fetch('/setup-business', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user: { id: fbId, name: 'User Name', email: 'user@example.com' },
+            accessToken,
+            igId: data.igId,
+          }),
+        }).then(res => console.log('Backend response:', res));
+      });
+  } else {
+    console.error('FB Login failed:', response);
+  }
+}, { scope: 'email,public_profile,instagram_basic' });
+
+
+
 
   const fetchPageAccessToken = (userAccessToken, userData) => {
     FB.api(
