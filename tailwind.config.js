@@ -3,6 +3,7 @@ module.exports = {
     './pages/**/*.{js,ts,jsx,tsx}',
     './components/**/*.{js,ts,jsx,tsx}',
     './utils/**/*.{js,ts,jsx,tsx}', // Include the `utils` directory if it has Tailwind-related files
+    './styles/**/*.{css}',
   ],
   theme: {
     extend: {

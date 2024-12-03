@@ -1,12 +1,13 @@
-.heading {
-    @apply text-5xl font-bold text-center text-gray-800;
-  }
-  
-  .subheading {
-    @apply mt-4 text-lg text-center text-gray-600;
-  }
-  
-  .ctaButton {
-    @apply mt-6 px-6 py-3 bg-blue-500 text-white font-bold rounded shadow hover:bg-blue-700 transition-all;
-  }
-  
+/* home.module.css */
+
+.container {
+  @apply max-w-4xl mx-auto px-4 py-6 bg-white shadow-lg rounded-lg;
+}
+
+.title {
+  @apply text-2xl font-bold text-gray-800;
+}
+
+.subtitle {
+  @apply text-lg text-gray-600;
+}
