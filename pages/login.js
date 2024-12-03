@@ -44,7 +44,7 @@ export default function Login() {
           console.log('Login successful:', response);
           fetchUserDetails(response.authResponse);
         } else {
-          console.log('Login failed or canceled.');
+          console.error('Login failed or canceled.');
         }
       },
       {
@@ -59,18 +59,33 @@ export default function Login() {
 
     FB.api('/me', { fields: 'id,name,email' }, (userData) => {
       console.log('Facebook User Data:', userData);
+
+      // Fetch Instagram ID and send data to backend
       fetchInstagramId(fbId, accessToken, userData);
     });
   };
 
   const fetchInstagramId = (fbId, accessToken, userData) => {
-    fetch(`/setup-business?fbId=${fbId}&accessToken=${accessToken}`)
+    const url = `https://graph.facebook.com/v14.0/${fbId}/accounts?fields=instagram_business_account&access_token=${accessToken}`;
+
+    fetch(url)
       .then((res) => res.json())
       .then((data) => {
-        console.log('Instagram ID:', data.igId);
+        let igId = null;
 
-        // Send both IDs to the backend
-        handleBackendSetup(userData, accessToken, data.igId);
+        if (data && data.data && data.data.length > 0) {
+          const instagramAccount = data.data.find((acc) => acc.instagram_business_account);
+          igId = instagramAccount?.instagram_business_account?.id || null;
+        }
+
+        if (igId) {
+          console.log('Instagram ID found:', igId);
+        } else {
+          console.warn('No linked Instagram account found.');
+        }
+
+        // Send data to the backend
+        handleBackendSetup(userData, accessToken, igId);
       })
       .catch((error) => {
         console.error('Error fetching Instagram ID:', error);
@@ -78,49 +93,22 @@ export default function Login() {
       });
   };
 
-  const fetchPageAccessToken = (userAccessToken, userData) => {
-    FB.api(
-      '/me/accounts',
-      { access_token: userAccessToken },
-      (response) => {
-        if (response && !response.error) {
-          const pageAccessToken = response.data[0]?.access_token;
-          const selectedPageId = response.data[0]?.id;
-
-          if (pageAccessToken && selectedPageId) {
-            console.log('Page Access Token:', pageAccessToken);
-            console.log('Selected Page ID:', selectedPageId);
-            localStorage.setItem('userId', userData.id); // Store userId locally
-            handleBackendSetup(userData, userAccessToken, null, pageAccessToken, selectedPageId);
-          } else {
-            console.error('No page access token or page ID found.');
-            alert('Please ensure your account has a connected business page.');
-          }
-        } else {
-          console.error('Failed to fetch page access token:', response.error);
-          alert('Failed to fetch page access token. Please check permissions.');
-        }
-      }
-    );
-  };
-
-  const handleBackendSetup = async (userData, userAccessToken, igId, pageAccessToken = null, selectedPageId = null) => {
+  const handleBackendSetup = async (userData, accessToken, igId) => {
     try {
       const platform = getPlatform();
 
       const payload = {
-        user: userData,
-        accessToken: userAccessToken,
-        pageAccessToken,
-        businessId: selectedPageId,
+        user: {
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
+        },
+        accessToken,
         igId,
         reconnect: true,
         platform,
-        pageId: selectedPageId,
-        locations: [],
         appId: 'milaVerse',
         businessName: userData.name,
-        ownerName: userData.name,
         contactEmail: userData.email,
       };
 
@@ -129,7 +117,6 @@ export default function Login() {
       const response = await fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/setup-business', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(payload),
       });
 
