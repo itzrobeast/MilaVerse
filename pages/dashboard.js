@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import Navbar from "../components/Navbar";
+import LeadsDashboard from "../components/LeadsDashboard";
 
 export default function Dashboard() {
   const [business, setBusiness] = useState({
@@ -14,6 +16,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userId, setUserId] = useState(null);
+  const [currentTab, setCurrentTab] = useState("settings"); // Default to settings tab
 
   // Load user ID from localStorage
   useEffect(() => {
@@ -28,7 +31,7 @@ export default function Dashboard() {
     }
   }, []);
 
-  // Fetch business data once user ID is available
+  // Fetch business and Vonage number data once user ID is available
   useEffect(() => {
     let isMounted = true;
 
@@ -130,31 +133,11 @@ export default function Dashboard() {
     }
   };
 
-  // Render loading or error states
-  if (loading) {
-    return <p className="text-gray-600">Loading...</p>;
-  }
-
-  if (error) {
-    return <p className="text-red-600">{error}</p>;
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-      {/* Header */}
-      <header className="py-10 text-center bg-white text-gray-800">
-        <img
-          src="/milaverse2.webp"
-          alt="Milaverse Logo"
-          className="mx-auto w-full max-w-[300px] h-auto"
-        />
-        <h1 className="text-4xl font-bold mt-4">MilaVerse</h1>
-        <p className="text-lg mt-2 opacity-90">
-          Your AI-powered business management dashboard
-        </p>
-      </header>
-
-      {/* Dashboard Form */}
+  const renderTabContent = () => {
+    if (currentTab === "leads") {
+      return <LeadsDashboard />;
+    }
+    return (
       <div className="max-w-4xl mx-auto bg-white text-gray-800 shadow-lg rounded-xl p-8 mt-8">
         <h2 className="text-2xl font-bold mb-6 text-center">
           Manage Business Settings
@@ -266,6 +249,21 @@ export default function Dashboard() {
           </button>
         </form>
       </div>
+    );
+  };
+
+  if (loading) {
+    return <p className="text-gray-600">Loading...</p>;
+  }
+
+  if (error) {
+    return <p className="text-red-600">{error}</p>;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+      <Navbar currentTab={currentTab} setCurrentTab={setCurrentTab} />
+      <main>{renderTabContent()}</main>
     </div>
   );
 }
