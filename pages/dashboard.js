@@ -10,6 +10,7 @@ export default function Dashboard() {
     insurancePolicies: "",
     pageId: "", // Read-only
   });
+  const [vonageNumber, setVonageNumber] = useState(null); // For phone number
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userId, setUserId] = useState(null);
@@ -47,7 +48,7 @@ export default function Dashboard() {
             insurancePolicies: data.insurance_policies || "",
             email: data.contact_email || "",
             aiKnowledge: data.ai_knowledge_base || "",
-            pageId: data.page_id || '',
+            pageId: data.page_id || "",
           });
         } else if (isMounted) {
           setError(data.error || "Failed to fetch business information.");
@@ -61,7 +62,27 @@ export default function Dashboard() {
       }
     };
 
+    const fetchVonageNumber = async () => {
+      try {
+        const response = await fetch(
+          `https://nodejs-serverless-function-express-two-wine.vercel.app/get-vonage-number?userId=${userId}`
+        );
+        const data = await response.json();
+
+        if (response.ok && isMounted) {
+          setVonageNumber(data.vonage_number || "Not Assigned");
+        } else if (isMounted) {
+          setVonageNumber("Error retrieving phone number.");
+        }
+      } catch (err) {
+        if (isMounted) {
+          setVonageNumber("Error retrieving phone number.");
+        }
+      }
+    };
+
     fetchBusiness();
+    fetchVonageNumber();
 
     return () => {
       isMounted = false;
@@ -220,6 +241,17 @@ export default function Dashboard() {
               type="text"
               name="pageId"
               value={business.pageId || ""}
+              readOnly
+              className="w-full px-4 py-2 border bg-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          {/* Vonage Business Number */}
+          <div>
+            <label className="block text-sm font-medium">Your Mila Business Phone Number</label>
+            <input
+              type="text"
+              value={vonageNumber || "Loading..."}
               readOnly
               className="w-full px-4 py-2 border bg-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
             />
