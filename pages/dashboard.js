@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
-import Leads from "./leads";
-import BusinessSettings from "../components/BusinessSettings";
+import Navbar from "../components/Navbar.js";
+import Leads from "./leads.js";
+import BusinessSettings from "../components/BusinessSettings.js";
 
 export default function Dashboard() {
   const [business, setBusiness] = useState({
