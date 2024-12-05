@@ -46,6 +46,7 @@ export default function Login() {
       (response) => {
         if (response.authResponse) {
           console.log('Login successful:', response);
+          localStorage.setItem('authToken', response.authResponse.accessToken); // Store token here
           fetchUserDetails(response.authResponse);
         } else {
           console.error('Login failed or canceled.');
@@ -150,8 +151,6 @@ export default function Login() {
       alert('An error occurred while setting up your account. Please try again.');
     }
   };
-  
-localStorage.setItem('authToken', response.authResponse.accessToken); // Example token storage
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
