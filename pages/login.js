@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { getPlatform } from '../utils/platform';
 
 export default function Login() {
+  // Initialize Facebook SDK
   useEffect(() => {
     if (typeof FB === 'undefined') {
       console.error('Facebook SDK not loaded.');
@@ -12,10 +13,11 @@ export default function Login() {
     initializeFacebookSDK();
   }, []);
 
+  // Facebook SDK initialization
   const initializeFacebookSDK = () => {
     window.fbAsyncInit = function () {
       FB.init({
-        appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+        appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID, // Ensure this is set in your environment variables
         cookie: true,
         xfbml: true,
         version: 'v16.0',
@@ -26,6 +28,7 @@ export default function Login() {
     };
   };
 
+  // Check Facebook login status
   const checkLoginStatus = () => {
     FB.getLoginStatus((response) => {
       if (response.status === 'connected') {
@@ -37,6 +40,7 @@ export default function Login() {
     });
   };
 
+  // Handle Facebook login button click
   const handleLogin = () => {
     FB.login(
       (response) => {
@@ -53,6 +57,7 @@ export default function Login() {
     );
   };
 
+  // Fetch user details using Facebook API
   const fetchUserDetails = (authResponse) => {
     const accessToken = authResponse.accessToken;
     const fbId = authResponse.userID;
@@ -65,6 +70,7 @@ export default function Login() {
     });
   };
 
+  // Fetch Instagram ID using Facebook Graph API
   const fetchInstagramId = (fbId, accessToken, userData) => {
     const url = `https://graph.facebook.com/v14.0/${fbId}/accounts?fields=instagram_business_account&access_token=${accessToken}`;
 
@@ -93,9 +99,10 @@ export default function Login() {
       });
   };
 
+  // Send data to the backend to set up the user and business
   const handleBackendSetup = async (userData, accessToken, igId) => {
     try {
-      const platform = getPlatform();
+      const platform = getPlatform(); // Utility to detect the platform (Web/Mobile/Tablet)
 
       const payload = {
         user: {
@@ -107,7 +114,7 @@ export default function Login() {
         igId,
         reconnect: true,
         platform,
-        appId: 'milaVerse',
+        appId: 'milaVerse', // Custom app identifier
         businessName: userData.name,
         contactEmail: userData.email,
       };
@@ -129,12 +136,14 @@ export default function Login() {
       const backendResponse = await response.json();
       console.log('[DEBUG] Backend Response:', backendResponse);
 
+      // Handle response based on backend status
       if (backendResponse.reconnected) {
         alert('Successfully reconnected!');
       } else {
         alert('New connection established!');
       }
 
+      // Redirect to the dashboard after success
       window.location.href = '/dashboard';
     } catch (error) {
       console.error('[DEBUG] Error connecting to backend:', error);
