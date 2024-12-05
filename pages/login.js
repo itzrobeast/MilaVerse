@@ -150,6 +150,8 @@ export default function Login() {
       alert('An error occurred while setting up your account. Please try again.');
     }
   };
+  
+localStorage.setItem('authToken', response.authResponse.accessToken); // Example token storage
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
