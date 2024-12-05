@@ -1,6 +1,6 @@
-// pages/_app.js
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Navbar from '../components/Navbar'; // Import the Navbar component
 import { Analytics } from '@vercel/analytics/react';
 import '../styles/globals.css';
 
@@ -42,6 +42,8 @@ function MyApp({ Component, pageProps }) {
 
   return (
     <>
+      {/* Render Navbar on all pages except /login */}
+      {router.pathname !== '/login' && <Navbar />}
       <Component {...pageProps} />
       <Analytics />
     </>
