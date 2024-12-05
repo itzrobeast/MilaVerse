@@ -10,15 +10,17 @@ function MyApp({ Component, pageProps }) {
   useEffect(() => {
     const verifySession = async () => {
       const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-      
+
       if (!token) {
-        console.error('No token found. Redirecting to login.');
-        router.push('/login'); // Redirect to login if no token
+        if (router.pathname !== '/login') {
+          console.error('No token found. Redirecting to login.');
+          router.push('/login'); // Redirect to login if not already there
+        }
         return;
       }
 
       try {
-        const response = await fetch('/verify-session', {
+        const response = await fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/verify-session', {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -33,7 +35,9 @@ function MyApp({ Component, pageProps }) {
         console.log('Session verified:', data); // Log user data for debugging
       } catch (error) {
         console.error('Error verifying session:', error.message);
-        router.push('/login'); // Redirect to login on error
+        if (router.pathname !== '/login') {
+          router.push('/login'); // Redirect to login on error
+        }
       }
     };
 
