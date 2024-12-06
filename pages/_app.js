@@ -7,10 +7,13 @@ import '../styles/globals.css';
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
 
+  // List of routes where Navbar should be hidden
+  const noNavbarRoutes = ['/login', '/logout']; 
+
   useEffect(() => {
     const verifySession = async () => {
       const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-
+      
       if (!token) {
         if (router.pathname !== '/login') {
           console.error('No token found. Redirecting to login.');
@@ -24,7 +27,6 @@ function MyApp({ Component, pageProps }) {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
           },
         });
 
@@ -47,8 +49,8 @@ function MyApp({ Component, pageProps }) {
 
   return (
     <>
-      {/* Render Navbar on all pages except /login */}
-      {router.pathname !== '/login' && <Navbar />}
+      {/* Render Navbar only if the current route is NOT in noNavbarRoutes */}
+      {!noNavbarRoutes.includes(router.pathname) && <Navbar />}
       <Component {...pageProps} />
       <Analytics />
     </>
