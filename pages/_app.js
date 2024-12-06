@@ -13,6 +13,7 @@ function MyApp({ Component, pageProps }) {
   useEffect(() => {
     const verifySession = async () => {
       const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+console.log('[DEBUG] Token being sent:', token);
       
       if (!token) {
         if (router.pathname !== '/login') {
@@ -24,11 +25,12 @@ function MyApp({ Component, pageProps }) {
 
       try {
         const response = await fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/verify-session', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+  method: 'GET',
+  headers: {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  },
+});
 
         if (!response.ok) {
           throw new Error('Session verification failed');
