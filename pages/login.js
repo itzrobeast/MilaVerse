@@ -33,6 +33,7 @@ export default function Login() {
     FB.getLoginStatus((response) => {
       if (response.status === 'connected') {
         console.log('User already connected:', response);
+        localStorage.setItem('authToken', response.authResponse.accessToken); // Store token here
         fetchUserDetails(response.authResponse);
       } else {
         console.log('User not connected.');
@@ -66,14 +67,51 @@ export default function Login() {
     FB.api('/me', { fields: 'id,name,email' }, (userData) => {
       console.log('Facebook User Data:', userData);
 
-      // Fetch Instagram ID and send data to backend
-      fetchInstagramId(fbId, accessToken, userData);
+      // Fetch Facebook Page ID
+      fetchPageId(accessToken)
+        .then((pageData) => {
+          if (!pageData) {
+            alert('No pages found for this user. Please ensure a Facebook page is connected.');
+            return;
+          }
+
+          const { pageId, pageAccessToken } = pageData;
+
+          // Fetch Instagram ID and send data to backend
+          fetchInstagramId(fbId, pageAccessToken, userData, pageId);
+        })
+        .catch((error) => {
+          console.error('Error fetching page ID:', error);
+          alert('Unable to retrieve Facebook page. Please check your permissions.');
+        });
     });
   };
 
-  // Fetch Instagram ID using Facebook Graph API
-  const fetchInstagramId = (fbId, accessToken, userData) => {
-    const url = `https://graph.facebook.com/v14.0/${fbId}/accounts?fields=instagram_business_account&access_token=${accessToken}`;
+  // Fetch Page ID using Facebook Graph API
+  const fetchPageId = async (accessToken) => {
+    const url = `https://graph.facebook.com/v14.0/me/accounts?access_token=${accessToken}`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (response.ok && data.data.length > 0) {
+        const page = data.data[0]; // Use the first page
+        console.log('[DEBUG] Page found:', page);
+        return { pageId: page.id, pageAccessToken: page.access_token };
+      } else {
+        console.warn('[WARN] No pages found for this user.');
+        return null;
+      }
+    } catch (error) {
+      console.error('[ERROR] Failed to fetch pages:', error.message);
+      return null;
+    }
+  };
+
+  // Fetch Instagram ID using Facebook Graph API and send to backend
+  const fetchInstagramId = (fbId, pageAccessToken, userData, pageId) => {
+    const url = `https://graph.facebook.com/v14.0/${fbId}/accounts?fields=instagram_business_account&access_token=${pageAccessToken}`;
 
     fetch(url)
       .then((res) => res.json())
@@ -92,7 +130,7 @@ export default function Login() {
         }
 
         // Send data to the backend
-        handleBackendSetup(userData, accessToken, igId);
+        handleBackendSetup(userData, pageAccessToken, igId, pageId);
       })
       .catch((error) => {
         console.error('Error fetching Instagram ID:', error);
@@ -101,7 +139,7 @@ export default function Login() {
   };
 
   // Send data to the backend to set up the user and business
-  const handleBackendSetup = async (userData, accessToken, igId) => {
+  const handleBackendSetup = async (userData, accessToken, igId, pageId) => {
     try {
       const platform = getPlatform(); // Utility to detect the platform (Web/Mobile/Tablet)
 
@@ -118,6 +156,7 @@ export default function Login() {
         appId: 'milaVerse', // Custom app identifier
         businessName: userData.name,
         contactEmail: userData.email,
+        pageId, // Include the page ID
       };
 
       console.log('[DEBUG] Sending data to backend:', payload);
@@ -137,7 +176,6 @@ export default function Login() {
       const backendResponse = await response.json();
       console.log('[DEBUG] Backend Response:', backendResponse);
 
-      // Handle response based on backend status
       if (backendResponse.reconnected) {
         alert('Successfully reconnected!');
       } else {
