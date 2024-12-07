@@ -27,31 +27,28 @@ export default function Login() {
     }
   };
 
-  const handleLogin = () => {
+ const handleLogin = () => {
   FB.login(
     (response) => {
       if (response.authResponse) {
         const token = response.authResponse.accessToken;
-        console.log('New Access Token:', token);
 
-        // Send the token to the backend login endpoint
         fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ accessToken: token }),
         })
           .then((res) => {
-            if (!res.ok) throw new Error('Login failed.');
+            if (!res.ok) throw new Error('Login failed');
             return res.json();
           })
           .then((data) => {
-            console.log('Login successful:', data);
-            // Store session data locally
-            localStorage.setItem('authToken', data.token); // Save the JWT
-            localStorage.setItem('businessId', data.businessId); // Save the business ID
+            console.log('[DEBUG] Login successful:', data);
+            localStorage.setItem('authToken', data.token); // Save JWT
+            localStorage.setItem('businessId', data.businessId); // Save business ID
             window.location.href = '/dashboard'; // Redirect to dashboard
           })
-          .catch((err) => console.error('[ERROR] Login failed:', err.message));
+          .catch((err) => console.error('[ERROR] Login failed:', err));
       } else {
         console.error('User canceled login or did not fully authorize.');
       }
