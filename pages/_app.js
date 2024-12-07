@@ -11,43 +11,34 @@ function MyApp({ Component, pageProps }) {
   const noNavbarRoutes = ['/login', '/logout']; 
 
   useEffect(() => {
-    const verifySession = async () => {
-      const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-console.log('[DEBUG] Token being sent:', token);
-      
-      if (!token) {
-        if (router.pathname !== '/login') {
-          console.error('No token found. Redirecting to login.');
-          router.push('/login'); // Redirect to login if not already there
-        }
-        return;
+  const verifySession = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      router.push('/login'); // Redirect if no token
+      return;
+    }
+
+    try {
+      const response = await fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/verify-session', {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        throw new Error('Session verification failed');
       }
 
-      try {
-        const response = await fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/verify-session', {
-  method: 'GET',
-  headers: {
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  },
-});
+      const data = await response.json();
+      console.log('Session verified:', data);
+    } catch (error) {
+      console.error('[ERROR] Verifying session failed:', error.message);
+      router.push('/login'); // Redirect on error
+    }
+  };
 
-        if (!response.ok) {
-          throw new Error('Session verification failed');
-        }
+  verifySession();
+}, [router]);
 
-        const data = await response.json();
-        console.log('Session verified:', data); // Log user data for debugging
-      } catch (error) {
-        console.error('Error verifying session:', error.message);
-        if (router.pathname !== '/login') {
-          router.push('/login'); // Redirect to login on error
-        }
-      }
-    };
-
-    verifySession();
-  }, [router]);
 
   return (
     <>
