@@ -19,104 +19,67 @@ export default function Dashboard() {
   const [userId, setUserId] = useState(null);
   const [currentTab, setCurrentTab] = useState("settings"); // Default to settings tab
 
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
   // Load user ID from localStorage
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedUserId = localStorage.getItem("userId");
-      if (storedUserId) {
-        setUserId(storedUserId);
-      } else {
-        setError("User not logged in.");
-        setLoading(false);
-      }
+    const storedUserId = localStorage.getItem("userId");
+    if (storedUserId) {
+      setUserId(storedUserId);
+    } else {
+      setError("User not logged in.");
+      setLoading(false);
     }
   }, []);
 
   // Fetch business and Vonage number data once user ID is available
   useEffect(() => {
-    let isMounted = true;
-
     if (!userId) return;
 
     const fetchBusiness = async () => {
       try {
-        const response = await fetch(
-          `https://nodejs-serverless-function-express-two-wine.vercel.app/get-business?userId=${userId}`
-        );
+        const response = await fetch(`${BACKEND_URL}/get-business?userId=${userId}`);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to fetch business information.");
+        }
         const data = await response.json();
-
-        if (response.ok && isMounted) {
-          setBusiness({
-            ...data,
-            objections: data.objections || "",
-            insurancePolicies: data.insurance_policies || "",
-            email: data.contact_email || "",
-            aiKnowledge: data.ai_knowledge_base || "",
-            pageId: data.page_id || "",
-          });
-        } else if (isMounted) {
-          setError(data.error || "Failed to fetch business information.");
-        }
+        setBusiness((prev) => ({
+          ...prev,
+          name: data.name || "",
+          email: data.contact_email || "",
+          locations: data.locations || "",
+          aiKnowledge: data.ai_knowledge_base || "",
+          objections: data.objections || "",
+          insurancePolicies: data.insurance_policies || "",
+          pageId: data.page_id || "",
+        }));
       } catch (err) {
-        if (isMounted) {
-          setError("An error occurred while fetching business data.");
-        }
+        setError(err.message);
       } finally {
-        if (isMounted) setLoading(false);
+        setLoading(false);
       }
     };
 
     const fetchVonageNumber = async () => {
       try {
-        const response = await fetch(
-          `https://nodejs-serverless-function-express-two-wine.vercel.app/get-vonage-number?userId=${userId}`
-        );
+        const response = await fetch(`${BACKEND_URL}/get-vonage-number?userId=${userId}`);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to fetch Vonage number.");
+        }
         const data = await response.json();
-
-        if (response.ok && isMounted) {
-          setVonageNumber(data.vonage_number || "Not Assigned");
-        } else if (isMounted) {
-          setVonageNumber("Error retrieving phone number.");
-        }
+        setVonageNumber(data.vonage_number || "Not Assigned");
       } catch (err) {
-        if (isMounted) {
-          setVonageNumber("Error retrieving phone number.");
-        }
+        setVonageNumber("Error retrieving phone number.");
       }
     };
 
     fetchBusiness();
     fetchVonageNumber();
+  }, [userId, BACKEND_URL]);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [userId]);
-
-  const renderTabContent = () => {
-    if (currentTab === "leads") {
-      return <Leads />;
-    }
-    return (
-      <div className="max-w-4xl mx-auto bg-white text-gray-800 shadow-lg rounded-xl p-8 mt-8">
-        <h2 className="text-2xl font-bold mb-6 text-center">
-          Manage Business Settings
-        </h2>
-        <BusinessSettings
-          business={business}
-          vonageNumber={vonageNumber}
-          handleSave={handleSave}
-          handleInputChange={handleInputChange}
-        />
-      </div>
-    );
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setBusiness((prev) => ({ ...prev, [name]: value }));
-  };
-
+  // Update business information
   const handleSave = async (e) => {
     e.preventDefault();
 
@@ -132,17 +95,15 @@ export default function Dashboard() {
         page_id: business.pageId || "", // Read-only, include if relevant
       };
 
-      const response = await fetch(
-        "https://nodejs-serverless-function-express-two-wine.vercel.app/get-business",
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch(`${BACKEND_URL}/get-business`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to update business information.");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update business information.");
       }
 
       alert("Business information updated successfully!");
@@ -151,6 +112,31 @@ export default function Dashboard() {
     }
   };
 
+  // Handle input changes in form
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setBusiness((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Render tab content
+  const renderTabContent = () => {
+    if (currentTab === "leads") {
+      return <Leads />;
+    }
+    return (
+      <div className="max-w-4xl mx-auto bg-white text-gray-800 shadow-lg rounded-xl p-8 mt-8">
+        <h2 className="text-2xl font-bold mb-6 text-center">Manage Business Settings</h2>
+        <BusinessSettings
+          business={business}
+          vonageNumber={vonageNumber}
+          handleSave={handleSave}
+          handleInputChange={handleInputChange}
+        />
+      </div>
+    );
+  };
+
+  // Handle loading and error states
   if (loading) {
     return <p className="text-gray-600">Loading...</p>;
   }
@@ -159,6 +145,7 @@ export default function Dashboard() {
     return <p className="text-red-600">{error}</p>;
   }
 
+  // Main dashboard UI
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
       <Navbar currentTab={currentTab} setCurrentTab={setCurrentTab} />
