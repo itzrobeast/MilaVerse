@@ -7,44 +7,56 @@ import '../styles/globals.css';
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
 
-  // List of routes where Navbar should be hidden
-  const noNavbarRoutes = ['/login', '/logout']; 
+  // Define routes where the Navbar should not be displayed
+  const noNavbarRoutes = ['/login', '/logout'];
 
+  // Verify session and manage redirection
   useEffect(() => {
-  const verifySession = async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      router.push('/login'); // Redirect if no token
-      return;
-    }
+    const verifySession = async () => {
+      try {
+        // Get the token from localStorage
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          console.warn('[DEBUG] No token found. Redirecting to /login.');
+          router.push('/login'); // Redirect to login if no token exists
+          return;
+        }
 
-    try {
-      const response = await fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/verify-session', {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      });
+        // Verify session with the backend
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/verify-session`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
-      if (!response.ok) {
-        throw new Error('Session verification failed');
+        if (!response.ok) {
+          console.error('[ERROR] Session verification failed:', response.status);
+          router.push('/login'); // Redirect to login on failed verification
+          return;
+        }
+
+        const data = await response.json();
+        console.log('[DEBUG] Session verified successfully:', data);
+      } catch (error) {
+        console.error('[ERROR] Error verifying session:', error.message);
+        router.push('/login'); // Redirect to login on error
       }
+    };
 
-      const data = await response.json();
-      console.log('Session verified:', data);
-    } catch (error) {
-      console.error('[ERROR] Verifying session failed:', error.message);
-      router.push('/login'); // Redirect on error
-    }
-  };
-
-  verifySession();
-}, [router]);
-
+    verifySession();
+  }, [router]); // Dependency array includes `router` to ensure effect re-runs on route changes
 
   return (
     <>
-      {/* Render Navbar only if the current route is NOT in noNavbarRoutes */}
+      {/* Conditionally render Navbar */}
       {!noNavbarRoutes.includes(router.pathname) && <Navbar />}
+
+      {/* Render the main component for the current route */}
       <Component {...pageProps} />
+
+      {/* Include Vercel Analytics */}
       <Analytics />
     </>
   );
