@@ -42,22 +42,45 @@ export default function Login() {
   };
 
   // Handle Facebook login button click
-  const handleLogin = () => {
-    FB.login(
-      (response) => {
-        if (response.authResponse) {
-          console.log('Login successful:', response);
-          localStorage.setItem('authToken', response.authResponse.accessToken); // Store token here
-          fetchUserDetails(response.authResponse);
-        } else {
-          console.error('Login failed or canceled.');
-        }
-      },
-      {
-        scope: 'public_profile,email,pages_show_list,instagram_manage_messages,business_management,instagram_basic',
-      }
-    );
-  };
+  FB.login(
+  (response) => {
+    if (response.authResponse) {
+      const token = response.authResponse.accessToken;
+      console.log('New Access Token:', token);
+
+      // Store the token in localStorage for future use
+      localStorage.setItem('authToken', token);
+
+      // Send the new token to your backend
+      sendTokenToBackend(token);
+    } else {
+      console.error('User canceled login or did not fully authorize.');
+    }
+  },
+  { 
+    scope: 'public_profile,email,pages_show_list,instagram_basic,instagram_manage_messages,business_management' 
+  }
+);
+
+// Function to send the token to your backend
+const sendTokenToBackend = (token) => {
+  fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/setup-business', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      accessToken: token,
+      // Include other payload details your backend might need
+      user: { id: 'fb_user_id_here', name: 'fb_user_name_here', email: 'fb_user_email_here' },
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => console.log('Token sent successfully:', data))
+    .catch((error) => console.error('Error sending token to backend:', error));
+};
+
+
 
   // Fetch user details using Facebook API
   const fetchUserDetails = (authResponse) => {
