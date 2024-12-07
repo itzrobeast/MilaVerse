@@ -28,41 +28,38 @@ export default function Login() {
   };
 
   const handleLogin = () => {
-    FB.login(
-      (response) => {
-        if (response.authResponse) {
-          const token = response.authResponse.accessToken;
-          console.log('New Access Token:', token);
-          localStorage.setItem('authToken', token);
-          sendTokenToBackend(token);
-        } else {
-          console.error('User canceled login or did not fully authorize.');
-        }
-      },
-      {
-        scope: 'public_profile,email,pages_show_list,instagram_basic,instagram_manage_messages,business_management',
-      }
-    );
-  };
+  FB.login(
+    (response) => {
+      if (response.authResponse) {
+        const token = response.authResponse.accessToken;
+        console.log('New Access Token:', token);
 
-  const sendTokenToBackend = (token) => {
-    console.log('[DEBUG] Sending token to backend:', token);
-    fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/verify-session', {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Session verification failed.');
-        }
-        return response.json();
-      })
-      .then((data) => console.log('[DEBUG] Backend response:', data))
-      .catch((error) => console.error('[DEBUG] Error verifying session:', error));
-  };
+        // Send the token to the backend login endpoint
+        fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessToken: token }),
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error('Login failed.');
+            return res.json();
+          })
+          .then((data) => {
+            console.log('Login successful:', data);
+            // Store session data locally
+            localStorage.setItem('authToken', data.token); // Save the JWT
+            localStorage.setItem('businessId', data.businessId); // Save the business ID
+            window.location.href = '/dashboard'; // Redirect to dashboard
+          })
+          .catch((err) => console.error('[ERROR] Login failed:', err.message));
+      } else {
+        console.error('User canceled login or did not fully authorize.');
+      }
+    },
+    { scope: 'public_profile,email,pages_show_list,instagram_basic,instagram_manage_messages,business_management' }
+  );
+};
+
 
   return (
     <div>
