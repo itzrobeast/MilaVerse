@@ -43,8 +43,8 @@ export default function Login() {
           // Store the token in localStorage for future use
           localStorage.setItem('authToken', token);
 
-          // Send the new token to your backend
-          sendTokenToBackend(token);
+          // Fetch user details and set up the backend
+          fetchUserDetailsAndSetup(token);
         } else {
           console.error('User canceled login or did not fully authorize.');
         }
@@ -55,21 +55,73 @@ export default function Login() {
     );
   };
 
-  const sendTokenToBackend = (token) => {
+  const fetchUserDetailsAndSetup = (token) => {
+    FB.api('/me', { fields: 'id,name,email' }, (userData) => {
+      console.log('Facebook User Data:', userData);
+
+      fetchPageId(token).then((pageData) => {
+        if (!pageData) {
+          alert('No pages found for this user. Please ensure a Facebook page is connected.');
+          return;
+        }
+
+        const { pageId, pageAccessToken } = pageData;
+
+        handleBackendSetup(userData, token, pageId, pageAccessToken);
+      });
+    });
+  };
+
+  const fetchPageId = async (accessToken) => {
+    const url = `https://graph.facebook.com/v14.0/me/accounts?access_token=${accessToken}`;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (response.ok && data.data.length > 0) {
+        const page = data.data[0]; // Use the first page
+        console.log('[DEBUG] Page found:', page);
+        return { pageId: page.id, pageAccessToken: page.access_token };
+      } else {
+        console.warn('[WARN] No pages found for this user.');
+        return null;
+      }
+    } catch (error) {
+      console.error('[ERROR] Failed to fetch pages:', error.message);
+      return null;
+    }
+  };
+
+  const handleBackendSetup = async (userData, accessToken, pageId, pageAccessToken) => {
+    const platform = getPlatform(); // Utility to detect the platform (Web/Mobile)
+
+    const payload = {
+      appId: 'milaVerse',
+      businessName: userData.name,
+      contactEmail: userData.email,
+      user: {
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+      },
+      accessToken, // Token from FB.login
+      pageId, // Page ID retrieved from Facebook API
+      reconnect: true,
+      platform,
+    };
+
+    console.log('[DEBUG] Sending payload to backend:', payload);
+
     fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/setup-business', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        accessToken: token,
-        // Include other payload details your backend might need
-        user: { id: 'fb_user_id_here', name: 'fb_user_name_here', email: 'fb_user_email_here' },
-      }),
+      body: JSON.stringify(payload),
     })
       .then((response) => response.json())
-      .then((data) => console.log('Token sent successfully:', data))
-      .catch((error) => console.error('Error sending token to backend:', error));
+      .then((data) => console.log('[DEBUG] Backend response:', data))
+      .catch((error) => console.error('[ERROR] Backend setup failed:', error));
   };
 
   return (
