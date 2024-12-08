@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 
 export default function Login() {
   useEffect(() => {
-    // Dynamically load the Facebook SDK script
     if (typeof window !== 'undefined' && typeof FB === 'undefined') {
       loadFacebookSDK();
     }
@@ -11,12 +10,12 @@ export default function Login() {
   const loadFacebookSDK = () => {
     window.fbAsyncInit = function () {
       FB.init({
-        appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID, // Replace with your Facebook App ID
+        appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID, // Facebook App ID
         cookie: true,
         xfbml: true,
         version: 'v16.0',
       });
-      console.log('Facebook SDK initialized globally.');
+      console.log('Facebook SDK initialized.');
     };
 
     if (!document.getElementById('facebook-jssdk')) {
@@ -27,41 +26,51 @@ export default function Login() {
     }
   };
 
- const handleLogin = () => {
-  FB.login(
-    (response) => {
-      if (response.authResponse) {
-        const token = response.authResponse.accessToken;
+  const handleLogin = () => {
+    FB.login(
+      async (response) => {
+        if (response.authResponse) {
+          const token = response.authResponse.accessToken;
 
-        fetch('https://nodejs-serverless-function-express-two-wine.vercel.app/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ accessToken: token }),
-        })
-          .then((res) => {
-            if (!res.ok) throw new Error('Login failed');
-            return res.json();
-          })
-          .then((data) => {
-            console.log('[DEBUG] Login successful:', data);
-            localStorage.setItem('authToken', data.token); // Save JWT
-            localStorage.setItem('businessId', data.businessId); // Save business ID
-            window.location.href = '/dashboard'; // Redirect to dashboard
-          })
-          .catch((err) => console.error('[ERROR] Login failed:', err));
-      } else {
-        console.error('User canceled login or did not fully authorize.');
+          try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ accessToken: token }),
+            });
+
+            if (!res.ok) {
+              throw new Error('Login failed.');
+            }
+
+            const data = await res.json();
+            localStorage.setItem('authToken', data.token); // Store JWT
+            localStorage.setItem('businessId', data.businessId); // Store business ID
+            window.location.href = '/dashboard'; // Redirect
+          } catch (err) {
+            console.error('Login failed:', err);
+          }
+        } else {
+          console.error('User canceled login or did not authorize.');
+        }
+      },
+      {
+        scope: 'public_profile,email,pages_show_list,instagram_basic,instagram_manage_messages,business_management',
       }
-    },
-    { scope: 'public_profile,email,pages_show_list,instagram_basic,instagram_manage_messages,business_management' }
-  );
-};
-
+    );
+  };
 
   return (
-    <div>
-      <h1>Login to MilaVerse</h1>
-      <button onClick={handleLogin}>Login with Facebook</button>
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold mb-6">Login to MilaVerse</h1>
+        <button
+          onClick={handleLogin}
+          className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
+        >
+          Login with Facebook
+        </button>
+      </div>
     </div>
   );
 }
