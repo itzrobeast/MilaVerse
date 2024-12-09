@@ -9,35 +9,35 @@ function MyApp({ Component, pageProps }) {
   const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const verifySession = async () => {
+ const verifySession = async () => {
   try {
+    // Fetch the token securely, e.g., from state, secure storage, or cookie
+    const token = getAuthToken(); // Replace `getAuthToken` with your actual token retrieval logic
+
     const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
       method: 'GET',
-      credentials: 'include', // Ensures secure cookies are sent
+      credentials: 'include', // Sends secure cookies along with the request
       headers: {
         'Content-Type': 'application/json',
-        // Include Authorization header if expected by backend
-        // Replace `YOUR_TOKEN` with the actual token if required
-        Authorization: `Bearer ${token}`,
+        ...(token && { Authorization: `Bearer ${token}` }), // Include the header only if a token exists
       },
     });
 
-      if (res.ok) {
-        console.log('[DEBUG] Session verified successfully.');
-        setIsVerified(true);
-      } else if (res.status === 401) {
-        console.error('[DEBUG] Session expired. Redirecting to login.');
-        router.push('/login');
-      } else {
-        throw new Error('Session verification failed');
-      }
-    } catch (err) {
-      console.error('[ERROR] Session verification failed:', err.message);
-      router.push('/login');
-    } finally {
-      setLoading(false);
+      if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Session verification failed');
     }
-  };
+
+    const data = await res.json();
+    console.log('[DEBUG] Session verified:', data);
+
+    // Handle the verified session (e.g., update UI or state)
+    return data;
+  } catch (error) {
+    console.error('[ERROR] Session verification failed:', error.message);
+    throw error; // Re-throw to handle it in calling code
+  }
+};
 
   useEffect(() => {
     verifySession();
