@@ -5,12 +5,11 @@ export async function apiFetch(endpoint, options = {}) {
   const defaultHeaders = { 'Content-Type': 'application/json' };
 
   try {
-    const token = localStorage.getItem('authToken');
     const response = await fetch(url, {
       ...options,
+      credentials: 'include', // Ensures cookies are sent with the request
       headers: {
         ...defaultHeaders,
-        Authorization: `Bearer ${token}`,
         ...options.headers,
       },
     });
