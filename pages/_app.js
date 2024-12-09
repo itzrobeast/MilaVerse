@@ -39,7 +39,7 @@ function MyApp({ Component, pageProps }) {
 
   useEffect(() => {
     verifySession();
-  }, [router]);
+  }, [router.pathname]);
 
   if (loading) return <p>Loading...</p>;
 
