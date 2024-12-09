@@ -10,30 +10,6 @@ export default function Document() {
           rel="stylesheet"
         />
 
-        {/* Load Facebook SDK */}
-        <script
-          async
-          defer
-          crossOrigin="anonymous"
-          src="https://connect.facebook.net/en_US/sdk.js"
-        ></script>
-
-        {/* Initialize Facebook SDK */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.fbAsyncInit = function() {
-                FB.init({
-                  appId: '${process.env.NEXT_PUBLIC_FACEBOOK_APP_ID}',
-                  cookie: true,
-                  xfbml: true,
-                  version: 'v16.0'
-                });
-                console.log('Facebook SDK initialized globally.');
-              };
-            `,
-          }}
-        ></script>
       </Head>
       <body>
         <Main />
