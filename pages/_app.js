@@ -9,35 +9,33 @@ function MyApp({ Component, pageProps }) {
   const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(true);
 
- const verifySession = async () => {
-  try {
-    // Fetch the token securely, e.g., from state, secure storage, or cookie
-    const token = getAuthToken(); // Replace `getAuthToken` with your actual token retrieval logic
-
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
-      method: 'GET',
-      credentials: 'include', // Sends secure cookies along with the request
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }), // Include the header only if a token exists
-      },
-    });
+  const verifySession = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
+        method: 'GET',
+        credentials: 'include', // Sends secure cookies
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.error || 'Session verification failed');
+        const error = await res.json();
+        throw new Error(error.error || 'Session verification failed');
+      }
+
+      const data = await res.json();
+      console.log('[DEBUG] Session verified:', data);
+
+      setIsVerified(true); // Mark session as verified
+    } catch (error) {
+      console.error('[ERROR] Session verification failed:', error.message);
+      setIsVerified(false);
+      router.push('/login'); // Redirect to login on failure
+    } finally {
+      setLoading(false); // Stop the loading state
     }
-
-    const data = await res.json();
-    console.log('[DEBUG] Session verified:', data);
-
-    // Handle the verified session (e.g., update UI or state)
-    return data;
-  } catch (error) {
-    console.error('[ERROR] Session verification failed:', error.message);
-    throw error; // Re-throw to handle it in calling code
-  }
-};
+  };
 
   useEffect(() => {
     verifySession();
