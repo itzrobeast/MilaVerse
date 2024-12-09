@@ -10,14 +10,17 @@ function MyApp({ Component, pageProps }) {
   const [loading, setLoading] = useState(true);
 
   const verifySession = async () => {
-  const businessId = localStorage.getItem('businessId'); // Ensure this is retrieved correctly
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session?business_id=${businessId}`, {
-    method: 'GET',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-  });
-};
+    try {
+      const businessId = localStorage.getItem('businessId'); // Ensure this is retrieved correctly
+      if (!businessId) {
+        throw new Error('Business ID not found in localStorage');
+      }
 
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session?business_id=${businessId}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
 
       if (res.ok) {
         console.log('[DEBUG] Session verified successfully.');
