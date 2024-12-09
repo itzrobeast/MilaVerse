@@ -38,8 +38,10 @@ function MyApp({ Component, pageProps }) {
   };
 
   useEffect(() => {
-    verifySession();
-  }, [router.pathname]);
+  console.log('[DEBUG] Router path:', router.pathname);
+  verifySession().catch(err => console.error('[ERROR] verifySession:', err.message));
+}, [router.pathname]);
+
 
   if (loading) return <p>Loading...</p>;
 
