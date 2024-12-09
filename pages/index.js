@@ -9,7 +9,7 @@ export default function Home() {
         </p>
         import Link from 'next/link';
 
-<Link href="/auth/login">
+<Link href="/login">
   <a className="mt-6 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700">
     Get Started
   </a>
