@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
 import '../styles/globals.css';
+import { getAuthToken } from '../utils/auth';
 
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
