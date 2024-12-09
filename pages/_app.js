@@ -9,50 +9,48 @@ function MyApp({ Component, pageProps }) {
   const [isRefreshing, setIsRefreshing] = useState(false); // Prevent concurrent token refreshes
 
   useEffect(() => {
-    const verifySession = async () => {
-  const token = localStorage.getItem('authToken');
-  const businessId = localStorage.getItem('businessId'); // Fetch business ID
-
-  if (!token) {
-    console.warn('[DEBUG] No token found. Redirecting to /login.');
-    router.push('/login');
-    return;
-  }
-
-  if (!businessId) {
-    console.warn('[DEBUG] No business ID found. Redirecting to /login.');
-    router.push('/login');
-    return;
-  }
-
+   const verifySession = async () => {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/verify-session?business_id=${businessId}`, // Add business_id as query param
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      console.warn('[DEBUG] No token found. Redirecting to /auth/login.');
+      window.location.href = '/auth/login';
+      return;
+    }
+
+    const businessId = localStorage.getItem('businessId'); // Ensure businessId is stored
+    if (!businessId) {
+      console.error('[ERROR] Missing business ID. Redirecting to /auth/login.');
+      window.location.href = '/auth/login';
+      return;
+    }
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/verify-session?business_id=${businessId}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
     if (res.ok) {
       console.log('[DEBUG] Session verified successfully.');
-    } else if (res.status === 401) {
-      console.warn('[DEBUG] Token expired. Attempting to refresh token.');
-      if (!isRefreshing) {
-        await refreshToken();
-      }
     } else {
-      console.error('[ERROR] Session verification failed. Redirecting to /login.');
-      router.push('/login');
+      const errorText = await res.text();
+      console.error(`[ERROR] Session verification failed: ${errorText}`);
+      window.location.href = '/auth/login';
     }
   } catch (err) {
-    console.error('Error verifying session:', err.message);
-    router.push('/login');
+    console.error('[ERROR] Error during session verification:', err.message);
+    window.location.href = '/auth/login';
   }
 };
+
+// Call `verifySession` in a useEffect hook or equivalent lifecycle event
+useEffect(() => {
+  verifySession();
+}, []);
+
 
 
 
