@@ -38,46 +38,55 @@ export default function Login() {
       document.body.appendChild(script);
     }
   };
+  
+const handleLogin = () => {
+  setLoading(true); // Start loading spinner
+  setError(null); // Reset previous error messages
 
-  const handleLogin = () => {
-    setLoading(true); // Start loading spinner
-    setError(null); // Reset any previous error messages
+  FB.login(
+    async (response) => {
+      if (response.authResponse) {
+        const token = response.authResponse.accessToken;
 
-    FB.login(
-      async (response) => {
-        setLoading(false); // Stop loading spinner
-        if (response.authResponse) {
-          const token = response.authResponse.accessToken;
+        try {
+          // Make API call to backend /auth/login endpoint
+          const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accessToken: token }),
+          });
 
-          try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/login`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ accessToken: token }),
-            });
-
-            if (!res.ok) {
-              throw new Error('Login failed.');
-            }
-
-            const data = await res.json();
-            localStorage.setItem('authToken', data.token); // Store JWT
-            localStorage.setItem('businessId', data.businessId); // Store business ID
-            window.location.href = '/dashboard'; // Redirect
-          } catch (err) {
-            console.error('Login failed:', err);
-            setError('Unable to log in. Please try again.');
+          if (!res.ok) {
+            throw new Error('Login failed on the server.');
           }
-        } else {
-          console.error('User canceled login or did not authorize.');
-          setError('Login canceled by the user.');
+
+          const data = await res.json();
+
+          // Store JWT and businessId in localStorage
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('businessId', data.businessId);
+
+          // Redirect to dashboard after successful login
+          window.location.href = '/dashboard';
+        } catch (err) {
+          console.error('[ERROR] Login failed:', err.message);
+          setError('Unable to log in. Please try again later.');
+        } finally {
+          setLoading(false); // Stop loading spinner
         }
-      },
-      {
-        scope: 'public_profile,email,pages_show_list,instagram_basic,instagram_manage_messages,business_management',
+      } else {
+        console.error('[INFO] User canceled login or did not authorize.');
+        setError('Login was canceled by the user.');
+        setLoading(false); // Stop loading spinner
       }
-    );
-  };
+    },
+    {
+      scope: 'public_profile,email,pages_show_list,instagram_basic,instagram_manage_messages,business_management',
+    }
+  );
+};
+
+  
 
   const checkLoginStatus = () => {
     FB.getLoginStatus((response) => {
