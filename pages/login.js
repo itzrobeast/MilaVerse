@@ -54,6 +54,7 @@ const handleLogin = () => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ accessToken: token }),
+            credentials: 'include', // Include cookies with the request
           });
 
           if (!res.ok) {
