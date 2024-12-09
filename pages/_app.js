@@ -18,7 +18,7 @@ function MyApp({ Component, pageProps }) {
         'Content-Type': 'application/json',
         // Include Authorization header if expected by backend
         // Replace `YOUR_TOKEN` with the actual token if required
-        Authorization: `Bearer ${authToken}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
