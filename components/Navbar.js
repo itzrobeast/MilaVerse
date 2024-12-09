@@ -4,11 +4,18 @@ import { useRouter } from 'next/router';
 export default function Navbar() {
   const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    sessionStorage.removeItem('authToken');
+  const handleLogout = async () => {
+  try {
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
     router.push('/login'); // Redirect to login
-  };
+  } catch (err) {
+    console.error('[ERROR] Logout failed:', err.message);
+  }
+};
+
 
   return (
     <nav className="bg-blue-500 text-white px-4 py-4 flex justify-between items-center">
