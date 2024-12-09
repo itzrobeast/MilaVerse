@@ -1,30 +1,18 @@
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import Navbar from '../components/Navbar';
-import '../styles/globals.css';
-
-function MyApp({ Component, pageProps }) {
-  const router = useRouter();
-  const noNavbarRoutes = ['/login', '/logout'];
-  const [isVerified, setIsVerified] = useState(false);
-  const [loading, setLoading] = useState(true);
-
+useEffect(() => {
   const verifySession = async () => {
     try {
-      const businessId = localStorage.getItem('businessId'); // Ensure this is retrieved correctly
-      if (!businessId) {
-        throw new Error('Business ID not found in localStorage');
-      }
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session?business_id=${businessId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
         method: 'GET',
-        credentials: 'include',
+        credentials: 'include', // Ensure cookies are sent
         headers: { 'Content-Type': 'application/json' },
       });
 
       if (res.ok) {
         console.log('[DEBUG] Session verified successfully.');
         setIsVerified(true);
+      } else if (res.status === 401) {
+        console.error('[DEBUG] Session expired. Redirecting to login.');
+        router.push('/login');
       } else {
         throw new Error('Session verification failed');
       }
@@ -36,18 +24,5 @@ function MyApp({ Component, pageProps }) {
     }
   };
 
-  useEffect(() => {
-    verifySession();
-  }, [router]);
-
-  if (loading) return <p>Loading...</p>;
-
-  return (
-    <>
-      {!noNavbarRoutes.includes(router.pathname) && <Navbar />}
-      {isVerified ? <Component {...pageProps} /> : null}
-    </>
-  );
-}
-
-export default MyApp;
+  verifySession();
+}, [router]);
