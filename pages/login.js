@@ -4,27 +4,24 @@ export default function Login() {
   const [loading, setLoading] = useState(false); // Track loading state
   const [error, setError] = useState(null); // Track error messages
 
-  // Load Facebook SDK when the component mounts
   useEffect(() => {
     if (typeof window !== 'undefined' && typeof FB === 'undefined') {
       loadFacebookSDK();
     }
   }, []);
 
-  // Load Facebook SDK Script
   const loadFacebookSDK = () => {
     if (!document.getElementById('facebook-jssdk')) {
-      // Create and insert the SDK script
       const script = document.createElement('script');
       script.id = 'facebook-jssdk';
       script.src = 'https://connect.facebook.net/en_US/sdk.js';
       script.onload = () => console.log('[DEBUG] Facebook SDK script loaded.');
-      script.onerror = () => setError('Failed to load Facebook SDK. Please refresh and try again.');
+      script.onerror = () => setError('Failed to load Facebook SDK.');
       document.body.appendChild(script);
 
       window.fbAsyncInit = function () {
         FB.init({
-          appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID, // Your Facebook App ID
+          appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
           cookie: true,
           xfbml: true,
           version: 'v16.0',
@@ -34,54 +31,46 @@ export default function Login() {
     }
   };
 
-  // Handle Facebook Login
-  const handleLogin = async () => {
+  const handleLogin = () => {
     setLoading(true);
-    setError(null); // Reset any previous errors
+    setError(null);
 
-    FB.login(
-      async (response) => {
-        if (response.authResponse) {
-          const accessToken = response.authResponse.accessToken;
-
-          try {
-            // API call to the backend /auth/login endpoint
-            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ accessToken }),
-              credentials: 'include', // Include cookies with the request
-            });
-
-            if (!res.ok) {
-              const errorText = await res.text();
-              throw new Error(`Server Error: ${errorText}`);
-            }
-
-            const data = await res.json();
-
-            // Store JWT and businessId in localStorage
-            localStorage.setItem('authToken', data.token);
-            localStorage.setItem('businessId', data.businessId);
-
-            // Redirect to the dashboard after successful login
-            window.location.href = '/dashboard';
-          } catch (err) {
-            console.error('[ERROR] Login failed:', err.message);
-            setError('Unable to log in. Please try again later.');
-          } finally {
-            setLoading(false); // Stop the loading spinner
-          }
-        } else {
-          setError('Login was canceled by the user.');
-          console.warn('[INFO] User canceled login or did not authorize.');
-          setLoading(false); // Stop the loading spinner
-        }
-      },
-      {
-        scope: 'public_profile,email,pages_show_list,instagram_basic,instagram_manage_messages,business_management',
+    FB.login((response) => {
+      if (response.authResponse) {
+        const accessToken = response.authResponse.accessToken;
+        loginToBackend(accessToken); // Separate function for API call
+      } else {
+        setError('User canceled login or did not authorize.');
+        setLoading(false);
       }
-    );
+    }, {
+      scope: 'public_profile,email,pages_show_list,instagram_basic,instagram_manage_messages,business_management',
+    });
+  };
+
+  const loginToBackend = async (accessToken) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Backend Error: ${errorText}`);
+      }
+
+      const { token, businessId } = await res.json();
+      localStorage.setItem('authToken', token); // Save the token
+      localStorage.setItem('businessId', businessId); // Save business ID
+      window.location.href = '/dashboard'; // Redirect after login
+    } catch (err) {
+      console.error('[ERROR] Login failed:', err.message);
+      setError('Failed to log in. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
