@@ -9,24 +9,27 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
   const router = useRouter();
 
-  const fetchDashboardData = async () => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-        },
-      });
-      if (!res.ok) throw new Error('Failed to fetch business data');
-      const data = await res.json();
-      setBusiness(data);
-    } catch (err) {
-      console.error('[ERROR] Fetching dashboard data:', err.message);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchDashboardData = async () => {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!res.ok) throw new Error('Failed to fetch business data');
+    const data = await res.json();
+    setBusiness(data);
+  } catch (err) {
+    console.error('[ERROR] Fetching dashboard data:', err.message);
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchDashboardData();
