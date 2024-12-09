@@ -6,23 +6,33 @@ export default function Login() {
   const [error, setError] = useState(null);
   const router = useRouter();
 
-  useEffect(() => {
+ useEffect(() => {
+  try {
     if (!document.getElementById('facebook-jssdk')) {
       const script = document.createElement('script');
       script.id = 'facebook-jssdk';
       script.src = 'https://connect.facebook.net/en_US/sdk.js';
       script.onload = () => {
-        FB.init({
-          appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
-          cookie: true,
-          xfbml: true,
-          version: 'v16.0',
-        });
-        console.log('[DEBUG] Facebook SDK initialized.');
+        if (window.FB) {
+          FB.init({
+            appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+            cookie: true,
+            xfbml: true,
+            version: 'v16.0',
+          });
+          console.log('[DEBUG] Facebook SDK initialized.');
+        } else {
+          throw new Error('FB object not available');
+        }
       };
       document.body.appendChild(script);
     }
-  }, []);
+  } catch (err) {
+    console.error('[ERROR] Facebook SDK failed to load:', err.message);
+    setError('Failed to load Facebook SDK.');
+  }
+}, []);
+
 
   const handleLogin = () => {
     setLoading(true);
