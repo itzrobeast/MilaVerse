@@ -11,19 +11,9 @@ function MyApp({ Component, pageProps }) {
 
   const verifySession = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      const businessId = localStorage.getItem('businessId');
-
-      if (!token || !businessId) {
-        throw new Error('Missing token or business ID');
-      }
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/verify-session?business_id=${businessId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/verify-session`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        credentials: 'include', // Ensure cookies are sent with the request
       });
 
       if (res.ok) {
