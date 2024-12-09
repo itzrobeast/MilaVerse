@@ -1,19 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
 import '../styles/globals.css';
 
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
-
-  const noNavbarRoutes = ['/login', '/logout'];
+  const noNavbarRoutes = ['/auth/login', '/logout'];
+  const [isRefreshing, setIsRefreshing] = useState(false); // Prevent concurrent token refreshes
 
   useEffect(() => {
     const verifySession = async () => {
       const token = localStorage.getItem('authToken');
       if (!token) {
-        console.warn('[DEBUG] No token found. Redirecting to /login.');
-        router.push('/login');
+        console.warn('[DEBUG] No token found. Redirecting to /auth/login.');
+        router.push('/auth/login');
         return;
       }
 
@@ -30,25 +30,28 @@ function MyApp({ Component, pageProps }) {
           console.log('[DEBUG] Session verified successfully.');
         } else if (res.status === 401) {
           console.warn('[DEBUG] Token expired. Attempting to refresh token.');
-          await refreshToken();
+          if (!isRefreshing) {
+            await refreshToken();
+          }
         } else {
-          console.error('[ERROR] Session verification failed.');
-          router.push('/login');
+          console.error('[ERROR] Session verification failed. Redirecting to /auth/login.');
+          router.push('/auth/login');
         }
       } catch (err) {
         console.error('Error verifying session:', err.message);
-        router.push('/login');
+        router.push('/auth/login');
       }
     };
 
     const refreshToken = async () => {
+      setIsRefreshing(true);
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/refresh-token`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ secret: process.env.NEXT_PUBLIC_MILA_SECRET }), // Use the secret if required
+          body: JSON.stringify({ secret: process.env.NEXT_PUBLIC_MILA_SECRET }),
         });
 
         if (res.ok) {
@@ -56,17 +59,19 @@ function MyApp({ Component, pageProps }) {
           localStorage.setItem('authToken', data.newToken);
           console.log('[DEBUG] Token refreshed successfully.');
         } else {
-          console.error('[ERROR] Failed to refresh token. Redirecting to /login.');
-          router.push('/login');
+          console.error('[ERROR] Failed to refresh token. Redirecting to /auth/login.');
+          router.push('/auth/login');
         }
       } catch (err) {
         console.error('Error refreshing token:', err.message);
-        router.push('/login');
+        router.push('/auth/login');
+      } finally {
+        setIsRefreshing(false);
       }
     };
 
     verifySession();
-  }, [router]);
+  }, [router, isRefreshing]);
 
   return (
     <>
