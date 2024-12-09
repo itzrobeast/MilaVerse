@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Add global imports here */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
 
 /* Add global custom styles */
 body {
