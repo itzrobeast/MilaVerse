@@ -10,38 +10,53 @@ function MyApp({ Component, pageProps }) {
 
   useEffect(() => {
     const verifySession = async () => {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        console.warn('[DEBUG] No token found. Redirecting to /login.');
-        router.push('/login');
-        return;
-      }
+  const token = localStorage.getItem('authToken');
+  const businessId = localStorage.getItem('businessId'); // Fetch business ID
 
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/verify-session`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+  if (!token) {
+    console.warn('[DEBUG] No token found. Redirecting to /login.');
+    router.push('/login');
+    return;
+  }
 
-        if (res.ok) {
-          console.log('[DEBUG] Session verified successfully.');
-        } else if (res.status === 401) {
-          console.warn('[DEBUG] Token expired. Attempting to refresh token.');
-          if (!isRefreshing) {
-            await refreshToken();
-          }
-        } else {
-          console.error('[ERROR] Session verification failed. Redirecting to /login.');
-          router.push('/login');
-        }
-      } catch (err) {
-        console.error('Error verifying session:', err.message);
-        router.push('/login');
+  if (!businessId) {
+    console.warn('[DEBUG] No business ID found. Redirecting to /login.');
+    router.push('/login');
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/verify-session?business_id=${businessId}`, // Add business_id as query param
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       }
-    };
+    );
+
+    if (res.ok) {
+      console.log('[DEBUG] Session verified successfully.');
+    } else if (res.status === 401) {
+      console.warn('[DEBUG] Token expired. Attempting to refresh token.');
+      if (!isRefreshing) {
+        await refreshToken();
+      }
+    } else {
+      console.error('[ERROR] Session verification failed. Redirecting to /login.');
+      router.push('/login');
+    }
+  } catch (err) {
+    console.error('Error verifying session:', err.message);
+    router.push('/login');
+  }
+};
+
+
+
+    
 
     const refreshToken = async () => {
       setIsRefreshing(true);
