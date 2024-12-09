@@ -32,12 +32,14 @@ export default function Login() {
       async (response) => {
         if (response.authResponse) {
           const accessToken = response.authResponse.accessToken;
+          console.log('[DEBUG] Facebook Access Token:', accessToken);
+
           try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ accessToken }),
-              credentials: 'include', // Ensure cookies are set by the backend
+              credentials: 'include', // Ensures secure cookies are set
             });
 
             if (!res.ok) {
@@ -46,14 +48,15 @@ export default function Login() {
             }
 
             console.log('[DEBUG] Login successful.');
-            router.push('/dashboard'); // Redirect after successful login
+            router.push('/dashboard'); // Redirect user to the dashboard
           } catch (err) {
-            setError('Login failed. Please try again.');
             console.error('[ERROR] Login failed:', err.message);
+            setError('Login failed. Please try again.');
           } finally {
             setLoading(false);
           }
         } else {
+          console.warn('[DEBUG] User canceled login or did not authorize.');
           setError('User canceled login or did not authorize.');
           setLoading(false);
         }
