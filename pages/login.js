@@ -4,7 +4,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false); // Track loading state
   const [error, setError] = useState(null); // Track error messages
 
-  // Load Facebook SDK when component mounts
+  // Load Facebook SDK when the component mounts
   useEffect(() => {
     if (typeof window !== 'undefined' && typeof FB === 'undefined') {
       loadFacebookSDK();
@@ -13,39 +13,31 @@ export default function Login() {
 
   // Load Facebook SDK Script
   const loadFacebookSDK = () => {
-    window.fbAsyncInit = function () {
-      if (window.FB) {
+    if (!document.getElementById('facebook-jssdk')) {
+      // Create and insert the SDK script
+      const script = document.createElement('script');
+      script.id = 'facebook-jssdk';
+      script.src = 'https://connect.facebook.net/en_US/sdk.js';
+      script.onload = () => console.log('[DEBUG] Facebook SDK script loaded.');
+      script.onerror = () => setError('Failed to load Facebook SDK. Please refresh and try again.');
+      document.body.appendChild(script);
+
+      window.fbAsyncInit = function () {
         FB.init({
-          appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+          appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID, // Your Facebook App ID
           cookie: true,
           xfbml: true,
           version: 'v16.0',
         });
-        console.log('Facebook SDK initialized.');
-      } else {
-        setError('Failed to initialize Facebook SDK. Please try again later.');
-        console.error('Facebook SDK failed to initialize.');
-      }
-    };
-
-    // Check if the SDK script is already present
-    if (!document.getElementById('facebook-jssdk')) {
-      const script = document.createElement('script');
-      script.id = 'facebook-jssdk';
-      script.src = 'https://connect.facebook.net/en_US/sdk.js';
-      script.onload = () => console.log('Facebook SDK script loaded.');
-      script.onerror = () => {
-        setError('Failed to load Facebook SDK. Please refresh and try again.');
-        console.error('Failed to load Facebook SDK.');
+        console.log('[DEBUG] Facebook SDK initialized.');
       };
-      document.body.appendChild(script);
     }
   };
 
   // Handle Facebook Login
   const handleLogin = async () => {
     setLoading(true);
-    setError(null); // Reset previous error messages
+    setError(null); // Reset any previous errors
 
     FB.login(
       async (response) => {
@@ -62,7 +54,8 @@ export default function Login() {
             });
 
             if (!res.ok) {
-              throw new Error('Login failed on the server.');
+              const errorText = await res.text();
+              throw new Error(`Server Error: ${errorText}`);
             }
 
             const data = await res.json();
@@ -71,35 +64,24 @@ export default function Login() {
             localStorage.setItem('authToken', data.token);
             localStorage.setItem('businessId', data.businessId);
 
-            // Redirect to dashboard after successful login
+            // Redirect to the dashboard after successful login
             window.location.href = '/dashboard';
           } catch (err) {
             console.error('[ERROR] Login failed:', err.message);
             setError('Unable to log in. Please try again later.');
           } finally {
-            setLoading(false); // Stop loading spinner
+            setLoading(false); // Stop the loading spinner
           }
         } else {
           setError('Login was canceled by the user.');
-          console.error('[INFO] User canceled login or did not authorize.');
-          setLoading(false); // Stop loading spinner
+          console.warn('[INFO] User canceled login or did not authorize.');
+          setLoading(false); // Stop the loading spinner
         }
       },
       {
         scope: 'public_profile,email,pages_show_list,instagram_basic,instagram_manage_messages,business_management',
       }
     );
-  };
-
-  // Check Facebook Login Status (Optional Utility)
-  const checkLoginStatus = () => {
-    FB.getLoginStatus((response) => {
-      if (response.status === 'connected') {
-        console.log('User is already logged in.');
-      } else {
-        console.log('User is not logged in.');
-      }
-    });
   };
 
   return (
