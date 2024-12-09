@@ -10,12 +10,17 @@ function MyApp({ Component, pageProps }) {
   const [loading, setLoading] = useState(true);
 
   const verifySession = async () => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
-        method: 'GET',
-        credentials: 'include', // Include secure cookies
-        headers: { 'Content-Type': 'application/json' },
-      });
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
+      method: 'GET',
+      credentials: 'include', // Ensures secure cookies are sent
+      headers: {
+        'Content-Type': 'application/json',
+        // Include Authorization header if expected by backend
+        // Replace `YOUR_TOKEN` with the actual token if required
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
 
       if (res.ok) {
         console.log('[DEBUG] Session verified successfully.');
