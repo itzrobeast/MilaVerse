@@ -37,19 +37,24 @@ export default function Login() {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ accessToken }),
+              credentials: 'include', // Ensure cookies are set by the backend
             });
-            if (!res.ok) throw new Error('Failed to log in');
-            const { token, businessId } = await res.json();
-            localStorage.setItem('authToken', token);
-            localStorage.setItem('businessId', businessId);
-            router.push('/dashboard');
+
+            if (!res.ok) {
+              const errorText = await res.text();
+              throw new Error(`Backend Error: ${errorText}`);
+            }
+
+            console.log('[DEBUG] Login successful.');
+            router.push('/dashboard'); // Redirect after successful login
           } catch (err) {
             setError('Login failed. Please try again.');
+            console.error('[ERROR] Login failed:', err.message);
           } finally {
             setLoading(false);
           }
         } else {
-          setError('Login canceled by user.');
+          setError('User canceled login or did not authorize.');
           setLoading(false);
         }
       },
