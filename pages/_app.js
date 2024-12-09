@@ -10,12 +10,14 @@ function MyApp({ Component, pageProps }) {
   const [loading, setLoading] = useState(true);
 
   const verifySession = async () => {
+    const token = await getAuthToken();
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
         method: 'GET',
         credentials: 'include', // Sends secure cookies
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
 
