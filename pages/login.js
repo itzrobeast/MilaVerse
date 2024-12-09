@@ -4,12 +4,14 @@ export default function Login() {
   const [loading, setLoading] = useState(false); // Track loading state
   const [error, setError] = useState(null); // Track error messages
 
+  // Load Facebook SDK when component mounts
   useEffect(() => {
     if (typeof window !== 'undefined' && typeof FB === 'undefined') {
       loadFacebookSDK();
     }
   }, []);
 
+  // Load Facebook SDK Script
   const loadFacebookSDK = () => {
     window.fbAsyncInit = function () {
       if (window.FB) {
@@ -21,79 +23,79 @@ export default function Login() {
         });
         console.log('Facebook SDK initialized.');
       } else {
-        console.error('Facebook SDK failed to initialize.');
         setError('Failed to initialize Facebook SDK. Please try again later.');
+        console.error('Facebook SDK failed to initialize.');
       }
     };
 
+    // Check if the SDK script is already present
     if (!document.getElementById('facebook-jssdk')) {
       const script = document.createElement('script');
       script.id = 'facebook-jssdk';
       script.src = 'https://connect.facebook.net/en_US/sdk.js';
       script.onload = () => console.log('Facebook SDK script loaded.');
       script.onerror = () => {
-        console.error('Failed to load Facebook SDK.');
         setError('Failed to load Facebook SDK. Please refresh and try again.');
+        console.error('Failed to load Facebook SDK.');
       };
       document.body.appendChild(script);
     }
   };
-  
-const handleLogin = () => {
-  setLoading(true); // Start loading spinner
-  setError(null); // Reset previous error messages
 
-  FB.login(
-    async (response) => {
-      if (response.authResponse) {
-        const token = response.authResponse.accessToken;
+  // Handle Facebook Login
+  const handleLogin = async () => {
+    setLoading(true);
+    setError(null); // Reset previous error messages
 
-        try {
-          // Make API call to backend /auth/login endpoint
-          const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ accessToken: token }),
-            credentials: 'include', // Include cookies with the request
-          });
+    FB.login(
+      async (response) => {
+        if (response.authResponse) {
+          const accessToken = response.authResponse.accessToken;
 
-          if (!res.ok) {
-            throw new Error('Login failed on the server.');
+          try {
+            // API call to the backend /auth/login endpoint
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ accessToken }),
+              credentials: 'include', // Include cookies with the request
+            });
+
+            if (!res.ok) {
+              throw new Error('Login failed on the server.');
+            }
+
+            const data = await res.json();
+
+            // Store JWT and businessId in localStorage
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('businessId', data.businessId);
+
+            // Redirect to dashboard after successful login
+            window.location.href = '/dashboard';
+          } catch (err) {
+            console.error('[ERROR] Login failed:', err.message);
+            setError('Unable to log in. Please try again later.');
+          } finally {
+            setLoading(false); // Stop loading spinner
           }
-
-          const data = await res.json();
-
-          // Store JWT and businessId in localStorage
-          localStorage.setItem('authToken', data.token);
-          localStorage.setItem('businessId', data.businessId);
-
-          // Redirect to dashboard after successful login
-          window.location.href = '/dashboard';
-        } catch (err) {
-          console.error('[ERROR] Login failed:', err.message);
-          setError('Unable to log in. Please try again later.');
-        } finally {
+        } else {
+          setError('Login was canceled by the user.');
+          console.error('[INFO] User canceled login or did not authorize.');
           setLoading(false); // Stop loading spinner
         }
-      } else {
-        console.error('[INFO] User canceled login or did not authorize.');
-        setError('Login was canceled by the user.');
-        setLoading(false); // Stop loading spinner
+      },
+      {
+        scope: 'public_profile,email,pages_show_list,instagram_basic,instagram_manage_messages,business_management',
       }
-    },
-    {
-      scope: 'public_profile,email,pages_show_list,instagram_basic,instagram_manage_messages,business_management',
-    }
-  );
-};
+    );
+  };
 
-  
-
+  // Check Facebook Login Status (Optional Utility)
   const checkLoginStatus = () => {
     FB.getLoginStatus((response) => {
       if (response.status === 'connected') {
         console.log('User is already logged in.');
-        // Handle the token here if needed
       } else {
         console.log('User is not logged in.');
       }
