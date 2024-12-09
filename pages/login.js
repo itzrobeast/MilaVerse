@@ -8,23 +8,30 @@ export default function Login() {
   }, []);
 
   const loadFacebookSDK = () => {
-    window.fbAsyncInit = function () {
+  window.fbAsyncInit = function () {
+    if (window.FB) {
       FB.init({
-        appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID, // Facebook App ID
+        appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
         cookie: true,
         xfbml: true,
         version: 'v16.0',
       });
       console.log('Facebook SDK initialized.');
-    };
-
-    if (!document.getElementById('facebook-jssdk')) {
-      const script = document.createElement('script');
-      script.id = 'facebook-jssdk';
-      script.src = 'https://connect.facebook.net/en_US/sdk.js';
-      document.body.appendChild(script);
+    } else {
+      console.error('Facebook SDK failed to initialize.');
     }
   };
+
+  if (!document.getElementById('facebook-jssdk')) {
+    const script = document.createElement('script');
+    script.id = 'facebook-jssdk';
+    script.src = 'https://connect.facebook.net/en_US/sdk.js';
+    script.onload = () => console.log('Facebook SDK script loaded.');
+    script.onerror = () => console.error('Failed to load Facebook SDK.');
+    document.body.appendChild(script);
+  }
+};
+
 
   const handleLogin = () => {
     FB.login(
@@ -59,6 +66,13 @@ export default function Login() {
       }
     );
   };
+  
+FB.getLoginStatus((response) => {
+  if (response.status === 'connected') {
+    const token = response.authResponse.accessToken;
+    // Re-verify the token with the backend or handle session renewal.
+  }
+});
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
