@@ -5,15 +5,15 @@ import '../styles/globals.css';
 
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
-  const noNavbarRoutes = ['/auth/login', '/logout'];
+  const noNavbarRoutes = ['/login', '/logout'];
   const [isRefreshing, setIsRefreshing] = useState(false); // Prevent concurrent token refreshes
 
   useEffect(() => {
     const verifySession = async () => {
       const token = localStorage.getItem('authToken');
       if (!token) {
-        console.warn('[DEBUG] No token found. Redirecting to /auth/login.');
-        router.push('/auth/login');
+        console.warn('[DEBUG] No token found. Redirecting to /login.');
+        router.push('/login');
         return;
       }
 
@@ -34,12 +34,12 @@ function MyApp({ Component, pageProps }) {
             await refreshToken();
           }
         } else {
-          console.error('[ERROR] Session verification failed. Redirecting to /auth/login.');
-          router.push('/auth/login');
+          console.error('[ERROR] Session verification failed. Redirecting to /login.');
+          router.push('/login');
         }
       } catch (err) {
         console.error('Error verifying session:', err.message);
-        router.push('/auth/login');
+        router.push('/login');
       }
     };
 
