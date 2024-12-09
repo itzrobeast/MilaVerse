@@ -11,7 +11,7 @@ function MyApp({ Component, pageProps }) {
 
   const verifySession = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/verify-session`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
         method: 'GET',
         credentials: 'include', // Ensure cookies are sent with the request
       });
