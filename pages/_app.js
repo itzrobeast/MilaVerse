@@ -1,9 +1,19 @@
-useEffect(() => {
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import Navbar from '../components/Navbar';
+import '../styles/globals.css';
+
+function MyApp({ Component, pageProps }) {
+  const router = useRouter();
+  const noNavbarRoutes = ['/login', '/logout'];
+  const [isVerified, setIsVerified] = useState(false);
+  const [loading, setLoading] = useState(true);
+
   const verifySession = async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
         method: 'GET',
-        credentials: 'include', // Ensure cookies are sent
+        credentials: 'include', // Include secure cookies
         headers: { 'Content-Type': 'application/json' },
       });
 
@@ -24,5 +34,18 @@ useEffect(() => {
     }
   };
 
-  verifySession();
-}, [router]);
+  useEffect(() => {
+    verifySession();
+  }, [router]);
+
+  if (loading) return <p>Loading...</p>;
+
+  return (
+    <>
+      {!noNavbarRoutes.includes(router.pathname) && <Navbar />}
+      {isVerified ? <Component {...pageProps} /> : null}
+    </>
+  );
+}
+
+export default MyApp;
