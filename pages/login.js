@@ -1,57 +1,73 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Navbar from '../components/Navbar';
-import '../styles/globals.css';
 
-function MyApp({ Component, pageProps }) {
+export default function Login() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const router = useRouter();
-  const noNavbarRoutes = ['/login', '/logout'];
-  const [isVerified, setIsVerified] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  const verifySession = async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const businessId = localStorage.getItem('businessId');
-
-      if (!token || !businessId) {
-        throw new Error('Missing token or business ID');
-      }
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/verify-session?business_id=${businessId}`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (res.ok) {
-        console.log('[DEBUG] Session verified successfully.');
-        setIsVerified(true);
-      } else {
-        throw new Error('Session verification failed');
-      }
-    } catch (err) {
-      console.error('[ERROR] Session verification failed:', err.message);
-      router.push('/login');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    verifySession();
-  }, [router]);
+    if (!document.getElementById('facebook-jssdk')) {
+      const script = document.createElement('script');
+      script.id = 'facebook-jssdk';
+      script.src = 'https://connect.facebook.net/en_US/sdk.js';
+      script.onload = () => {
+        FB.init({
+          appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+          cookie: true,
+          xfbml: true,
+          version: 'v16.0',
+        });
+        console.log('[DEBUG] Facebook SDK initialized.');
+      };
+      document.body.appendChild(script);
+    }
+  }, []);
 
-  if (loading) return <p>Loading...</p>;
+  const handleLogin = () => {
+    setLoading(true);
+    setError(null);
+
+    FB.login(
+      async (response) => {
+        if (response.authResponse) {
+          const accessToken = response.authResponse.accessToken;
+          try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ accessToken }),
+            });
+            if (!res.ok) throw new Error('Failed to log in');
+            const { token, businessId } = await res.json();
+            localStorage.setItem('authToken', token);
+            localStorage.setItem('businessId', businessId);
+            router.push('/dashboard');
+          } catch (err) {
+            setError('Login failed. Please try again.');
+          } finally {
+            setLoading(false);
+          }
+        } else {
+          setError('Login canceled by user.');
+          setLoading(false);
+        }
+      },
+      { scope: 'public_profile,email' }
+    );
+  };
 
   return (
-    <>
-      {!noNavbarRoutes.includes(router.pathname) && <Navbar />}
-      {isVerified ? <Component {...pageProps} /> : null}
-    </>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white">
+      <h1 className="text-3xl mb-4">Login to MilaVerse</h1>
+      <button
+        onClick={handleLogin}
+        disabled={loading}
+        className="bg-blue-500 px-4 py-2 rounded text-white disabled:opacity-50"
+      >
+        {loading ? 'Logging in...' : 'Login with Facebook'}
+      </button>
+      {error && <p className="text-red-500 mt-2">{error}</p>}
+    </div>
   );
 }
-
-export default MyApp;
