@@ -10,14 +10,14 @@ function MyApp({ Component, pageProps }) {
   const [loading, setLoading] = useState(true);
 
   const verifySession = async () => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
-        method: 'GET',
-        credentials: 'include', // Include cookies in the request
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+  const businessId = localStorage.getItem('businessId'); // Ensure this is retrieved correctly
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session?business_id=${businessId}`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
 
       if (res.ok) {
         console.log('[DEBUG] Session verified successfully.');
