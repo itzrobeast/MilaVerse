@@ -38,55 +38,61 @@ export default function Login() {
   }, []);
 
   const handleLogin = async () => {
-    setLoading(true);
-    setError(null);
+  setLoading(true);
+  setError(null);
 
-    if (!window.FB) {
-      console.error('[ERROR] FB object is not available.');
-      setError('Facebook SDK not loaded. Please refresh the page.');
+  if (!window.FB) {
+    console.error('[ERROR] FB object is not available.');
+    setError('Facebook SDK not loaded. Please refresh the page.');
+    setLoading(false);
+    return;
+  }
+
+  FB.login((response) => {
+    console.log('[DEBUG] FB.login response:', response);
+
+    if (response.authResponse) {
+      const accessToken = response.authResponse.accessToken;
+      console.log('[DEBUG] User authenticated. Access Token:', accessToken);
+
+      // Call the asynchronous login processing function
+      processLogin(accessToken);
+    } else {
+      console.warn('[DEBUG] User canceled login or did not authorize.');
+      setError('User canceled login or did not authorize.');
       setLoading(false);
-      return;
+    }
+  }, { scope: 'public_profile,email', return_scopes: true });
+};
+
+const processLogin = async (accessToken) => {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken }),
+      credentials: 'include', // Ensures secure cookies are set
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Backend Error: ${errorText}`);
     }
 
-    FB.login(
-      async (response) => {
-        console.log('[DEBUG] FB.login response:', response);
+    console.log('[DEBUG] Login successful.');
+    router.push('/dashboard'); // Redirect user to the dashboard
+  } catch (err) {
+    console.error('[ERROR] Login failed:', err.message);
+    setError('Login failed. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
-        if (response.authResponse) {
-          const accessToken = response.authResponse.accessToken;
-          console.log('[DEBUG] User authenticated. Access Token:', accessToken);
 
-          try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ accessToken }),
-              credentials: 'include', // Ensures secure cookies are set
-            });
+  
 
-            if (!res.ok) {
-              const errorText = await res.text();
-              throw new Error(`Backend Error: ${errorText}`);
-            }
-
-            console.log('[DEBUG] Login successful.');
-            router.push('/dashboard'); // Redirect user to the dashboard
-          } catch (err) {
-            console.error('[ERROR] Login failed:', err.message);
-            setError('Login failed. Please try again.');
-          } finally {
-            setLoading(false);
-          }
-        } else {
-          console.warn('[DEBUG] User canceled login or did not authorize.');
-          setError('User canceled login or did not authorize.');
-          setLoading(false);
-        }
-      },
-      { scope: 'public_profile,email', return_scopes: true } // Add additional scopes if needed
-    );
-  };
-
+          
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white">
       <h1 className="text-3xl mb-4">Login to MilaVerse</h1>
