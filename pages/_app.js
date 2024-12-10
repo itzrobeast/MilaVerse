@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
 import '../styles/globals.css';
+import { getAuthToken } from '../utils/auth'; // Import getAuthToken from utils/auth.js
 
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
@@ -14,12 +15,15 @@ function MyApp({ Component, pageProps }) {
    */
   const verifySession = async () => {
     try {
-      // Send request to verify session; the cookie is automatically sent with `credentials: 'include'`
+      const token = getAuthToken(); // Retrieve the auth token from cookies
+      console.log('[DEBUG] Retrieved Auth Token:', token);
+
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
         method: 'GET',
-        credentials: 'include', // Ensures secure cookies are sent
+        credentials: 'include', // Include cookies in the request
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }), // Include token if available
         },
       });
 
@@ -42,7 +46,7 @@ function MyApp({ Component, pageProps }) {
   };
 
   /**
-   * Trigger session verification on route changes.
+   * Triggers session verification on route changes.
    */
   useEffect(() => {
     console.log('[DEBUG] Router path:', router.pathname);
