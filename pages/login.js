@@ -6,65 +6,68 @@ export default function Login() {
   const [error, setError] = useState(null);
   const router = useRouter();
 
- useEffect(() => {
-  try {
-    if (!document.getElementById('facebook-jssdk')) {
-      const script = document.createElement('script');
-      script.id = 'facebook-jssdk';
-      script.src = 'https://connect.facebook.net/en_US/sdk.js';
-      script.onload = () => {
-        if (window.FB) {
-          FB.init({
-            appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
-            cookie: true,
-            xfbml: true,
-            version: 'v16.0',
-          });
-          console.log('[DEBUG] Facebook SDK initialized.');
-        } else {
-          throw new Error('FB object not available');
-        }
-      };
-      document.body.appendChild(script);
+  useEffect(() => {
+    try {
+      if (!document.getElementById('facebook-jssdk')) {
+        const script = document.createElement('script');
+        script.id = 'facebook-jssdk';
+        script.src = 'https://connect.facebook.net/en_US/sdk.js';
+        script.onload = () => {
+          if (window.FB) {
+            FB.init({
+              appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+              cookie: true,
+              xfbml: true,
+              version: 'v16.0',
+            });
+            console.log('[DEBUG] Facebook SDK initialized.');
+          } else {
+            throw new Error('FB object not available');
+          }
+        };
+        document.body.appendChild(script);
+      }
+    } catch (err) {
+      console.error('[ERROR] Facebook SDK failed to load:', err.message);
+      setError('Failed to load Facebook SDK.');
     }
-  } catch (err) {
-    console.error('[ERROR] Facebook SDK failed to load:', err.message);
-    setError('Failed to load Facebook SDK.');
-  }
-}, []);
-
+  }, []);
 
   const handleLogin = () => {
     setLoading(true);
     setError(null);
 
     FB.login(
-      async (response) => {
+      (response) => {
         if (response.authResponse) {
-          const accessToken = response.authResponse.accessToken;
-          console.log('[DEBUG] Facebook Access Token:', accessToken);
+          const processLogin = async () => {
+            const accessToken = response.authResponse.accessToken;
+            console.log('[DEBUG] Facebook Access Token:', accessToken);
 
-          try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ accessToken }),
-              credentials: 'include', // Ensures secure cookies are set
-            });
+            try {
+              const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ accessToken }),
+                credentials: 'include', // Ensures secure cookies are set
+              });
 
-            if (!res.ok) {
-              const errorText = await res.text();
-              throw new Error(`Backend Error: ${errorText}`);
+              if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(`Backend Error: ${errorText}`);
+              }
+
+              console.log('[DEBUG] Login successful.');
+              router.push('/dashboard'); // Redirect user to the dashboard
+            } catch (err) {
+              console.error('[ERROR] Login failed:', err.message);
+              setError('Login failed. Please try again.');
+            } finally {
+              setLoading(false);
             }
+          };
 
-            console.log('[DEBUG] Login successful.');
-            router.push('/dashboard'); // Redirect user to the dashboard
-          } catch (err) {
-            console.error('[ERROR] Login failed:', err.message);
-            setError('Login failed. Please try again.');
-          } finally {
-            setLoading(false);
-          }
+          processLogin(); // Call the async function inside the callback
         } else {
           console.warn('[DEBUG] User canceled login or did not authorize.');
           setError('User canceled login or did not authorize.');
