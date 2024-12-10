@@ -38,61 +38,74 @@ export default function Login() {
   }, []);
 
   const handleLogin = async () => {
-  setLoading(true);
-  setError(null);
+    setLoading(true);
+    setError(null);
 
-  if (!window.FB) {
-    console.error('[ERROR] FB object is not available.');
-    setError('Facebook SDK not loaded. Please refresh the page.');
-    setLoading(false);
-    return;
-  }
+    if (!window.FB) {
+      console.error('[ERROR] FB object is not available.');
+      setError('Facebook SDK not loaded. Please refresh the page.');
+      setLoading(false);
+      return;
+    }
 
-  FB.login((response) => {
-    console.log('[DEBUG] FB.login response:', response);
+    FB.login(
+      (response) => {
+        console.log('[DEBUG] FB.login response:', response);
 
-    if (response.authResponse) {
-      const accessToken = response.authResponse.accessToken;
-      console.log('[DEBUG] User authenticated. Access Token:', accessToken);
+        if (response.authResponse) {
+          const { accessToken, userID } = response.authResponse;
+          console.log('[DEBUG] User authenticated. Access Token:', accessToken);
 
-      // Call the asynchronous login processing function
-      processLogin(accessToken);
-    } else {
-      console.warn('[DEBUG] User canceled login or did not authorize.');
-      setError('User canceled login or did not authorize.');
+          // Fetch user details
+          FB.api(
+            '/me',
+            { fields: 'id,name,email', access_token: accessToken },
+            (userInfo) => {
+              if (userInfo && !userInfo.error) {
+                console.log('[DEBUG] User Info:', userInfo);
+                // Call login processing function
+                processLogin(accessToken, userInfo);
+              } else {
+                console.error('[ERROR] Failed to fetch user info:', userInfo.error);
+                setError('Failed to fetch user information. Please try again.');
+                setLoading(false);
+              }
+            }
+          );
+        } else {
+          console.warn('[DEBUG] User canceled login or did not authorize.');
+          setError('User canceled login or did not authorize.');
+          setLoading(false);
+        }
+      },
+      { scope: 'public_profile,email', return_scopes: true }
+    );
+  };
+
+  const processLogin = async (accessToken, userInfo) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken, userInfo }),
+        credentials: 'include', // Ensures secure cookies are set
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Backend Error: ${errorText}`);
+      }
+
+      console.log('[DEBUG] Login successful.');
+      router.push('/dashboard'); // Redirect user to the dashboard
+    } catch (err) {
+      console.error('[ERROR] Login failed:', err.message);
+      setError('Login failed. Please try again.');
+    } finally {
       setLoading(false);
     }
-  }, { scope: 'public_profile,email', return_scopes: true });
-};
+  };
 
-const processLogin = async (accessToken) => {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken }),
-      credentials: 'include', // Ensures secure cookies are set
-    });
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`Backend Error: ${errorText}`);
-    }
-
-    console.log('[DEBUG] Login successful.');
-    router.push('/dashboard'); // Redirect user to the dashboard
-  } catch (err) {
-    console.error('[ERROR] Login failed:', err.message);
-    setError('Login failed. Please try again.');
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  
-
-          
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white">
       <h1 className="text-3xl mb-4">Login to MilaVerse</h1>
