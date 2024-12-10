@@ -56,6 +56,14 @@ export default function Login() {
           const accessToken = response.authResponse.accessToken;
           console.log('[DEBUG] User authenticated. Access Token:', accessToken);
 
+          } else {
+      console.error('[ERROR] FB.login failed:', response.status);
+    }
+  },
+  { scope: 'public_profile,email', return_scopes: true }
+);
+
+          
           const processLogin = async () => {
             try {
               const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
