@@ -7,43 +7,56 @@ export default function Login() {
   const router = useRouter();
 
   useEffect(() => {
-    try {
-      if (!document.getElementById('facebook-jssdk')) {
-        const script = document.createElement('script');
-        script.id = 'facebook-jssdk';
-        script.src = 'https://connect.facebook.net/en_US/sdk.js';
-        script.onload = () => {
-          if (window.FB) {
-            FB.init({
-              appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
-              cookie: true,
-              xfbml: true,
-              version: 'v16.0',
-            });
-            console.log('[DEBUG] Facebook SDK initialized.');
-          } else {
-            throw new Error('FB object not available');
-          }
-        };
-        document.body.appendChild(script);
-      }
-    } catch (err) {
-      console.error('[ERROR] Facebook SDK failed to load:', err.message);
-      setError('Failed to load Facebook SDK.');
+    if (!document.getElementById('facebook-jssdk')) {
+      console.log('[DEBUG] Adding Facebook SDK script...');
+      const script = document.createElement('script');
+      script.id = 'facebook-jssdk';
+      script.src = 'https://connect.facebook.net/en_US/sdk.js';
+      script.onload = () => {
+        if (window.FB) {
+          console.log('[DEBUG] Facebook SDK loaded successfully.');
+          FB.init({
+            appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+            cookie: true,
+            xfbml: true,
+            version: 'v16.0',
+          });
+          console.log('[DEBUG] Facebook SDK initialized.');
+        } else {
+          console.error('[ERROR] FB object is not available after script load.');
+          setError('Failed to load Facebook SDK.');
+        }
+      };
+      script.onerror = () => {
+        console.error('[ERROR] Failed to load the Facebook SDK script.');
+        setError('Failed to load Facebook SDK script.');
+      };
+      document.body.appendChild(script);
+    } else {
+      console.log('[DEBUG] Facebook SDK script already exists.');
     }
   }, []);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setLoading(true);
     setError(null);
 
+    if (!window.FB) {
+      console.error('[ERROR] FB object is not available.');
+      setError('Facebook SDK not loaded. Please refresh the page.');
+      setLoading(false);
+      return;
+    }
+
     FB.login(
       (response) => {
-        if (response.authResponse) {
-          const processLogin = async () => {
-            const accessToken = response.authResponse.accessToken;
-            console.log('[DEBUG] Facebook Access Token:', accessToken);
+        console.log('[DEBUG] FB.login response:', response);
 
+        if (response.authResponse) {
+          const accessToken = response.authResponse.accessToken;
+          console.log('[DEBUG] User authenticated. Access Token:', accessToken);
+
+          const processLogin = async () => {
             try {
               const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
                 method: 'POST',
@@ -67,14 +80,14 @@ export default function Login() {
             }
           };
 
-          processLogin(); // Call the async function inside the callback
+          processLogin();
         } else {
           console.warn('[DEBUG] User canceled login or did not authorize.');
           setError('User canceled login or did not authorize.');
           setLoading(false);
         }
       },
-      { scope: 'public_profile,email' }
+      { scope: 'public_profile,email' } // Add additional scopes if needed
     );
   };
 
