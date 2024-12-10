@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Navbar from '../components/Navbar'; // Adjusted for your directory structure
-import '../styles/globals.css'; // Global styles
-import { getAuthToken } from '../utils/auth'; // Ensure this function is properly defined in utils/auth.js
+import Navbar from '../components/Navbar';
+import '../styles/globals.css';
 
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
@@ -15,15 +14,12 @@ function MyApp({ Component, pageProps }) {
    */
   const verifySession = async () => {
     try {
-      const token = getAuthToken(); // Retrieve token from client storage (localStorage/cookies)
-      console.log('[DEBUG] Retrieved Auth Token:', token);
-
+      // Send request to verify session; the cookie is automatically sent with `credentials: 'include'`
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
         method: 'GET',
         credentials: 'include', // Ensures secure cookies are sent
         headers: {
           'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }), // Add token if available
         },
       });
 
@@ -46,7 +42,7 @@ function MyApp({ Component, pageProps }) {
   };
 
   /**
-   * Triggers session verification on route changes.
+   * Trigger session verification on route changes.
    */
   useEffect(() => {
     console.log('[DEBUG] Router path:', router.pathname);
