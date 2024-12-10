@@ -49,53 +49,41 @@ export default function Login() {
     }
 
     FB.login(
-      (response) => {
+      async (response) => {
         console.log('[DEBUG] FB.login response:', response);
 
         if (response.authResponse) {
           const accessToken = response.authResponse.accessToken;
           console.log('[DEBUG] User authenticated. Access Token:', accessToken);
 
-          } else {
-      console.error('[ERROR] FB.login failed:', response.status);
-    }
-  },
-  { scope: 'public_profile,email', return_scopes: true }
-);
+          try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ accessToken }),
+              credentials: 'include', // Ensures secure cookies are set
+            });
 
-          
-          const processLogin = async () => {
-            try {
-              const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ accessToken }),
-                credentials: 'include', // Ensures secure cookies are set
-              });
-
-              if (!res.ok) {
-                const errorText = await res.text();
-                throw new Error(`Backend Error: ${errorText}`);
-              }
-
-              console.log('[DEBUG] Login successful.');
-              router.push('/dashboard'); // Redirect user to the dashboard
-            } catch (err) {
-              console.error('[ERROR] Login failed:', err.message);
-              setError('Login failed. Please try again.');
-            } finally {
-              setLoading(false);
+            if (!res.ok) {
+              const errorText = await res.text();
+              throw new Error(`Backend Error: ${errorText}`);
             }
-          };
 
-          processLogin();
+            console.log('[DEBUG] Login successful.');
+            router.push('/dashboard'); // Redirect user to the dashboard
+          } catch (err) {
+            console.error('[ERROR] Login failed:', err.message);
+            setError('Login failed. Please try again.');
+          } finally {
+            setLoading(false);
+          }
         } else {
           console.warn('[DEBUG] User canceled login or did not authorize.');
           setError('User canceled login or did not authorize.');
           setLoading(false);
         }
       },
-      { scope: 'public_profile,email' } // Add additional scopes if needed
+      { scope: 'public_profile,email', return_scopes: true } // Add additional scopes if needed
     );
   };
 
