@@ -2,28 +2,32 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
 import '../styles/globals.css';
-import { getAuthToken } from '../utils/auth'; // Import getAuthToken from utils/auth.js
+import { getAuthToken } from '../utils/auth';
 
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
-  const noNavbarRoutes = ['/login', '/logout']; // Routes where Navbar is hidden
+  const noNavbarRoutes = ['/login', '/logout'];
   const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  /**
-   * Verifies the user's session by sending a request to the backend.
-   */
   const verifySession = async () => {
-    try {
-      const token = getAuthToken(); // Retrieve the auth token from cookies
-      console.log('[DEBUG] Retrieved Auth Token:', token);
+    const token = getAuthToken(); // Retrieve the token from cookies
+    console.log('[DEBUG] Retrieved Auth Token:', token);
 
+    if (!token) {
+      console.log('[DEBUG] No token found, redirecting to login...');
+      router.push('/login'); // Redirect to login page if no token exists
+      setLoading(false);
+      return;
+    }
+
+    try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
         method: 'GET',
         credentials: 'include', // Include cookies in the request
         headers: {
           'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }), // Include token if available
+          Authorization: `Bearer ${token}`, // Send token in the header
         },
       });
 
@@ -38,35 +42,32 @@ function MyApp({ Component, pageProps }) {
       setIsVerified(true); // Mark session as verified
     } catch (error) {
       console.error('[ERROR] Session verification failed:', error.message);
-      setIsVerified(false);
       router.push('/login'); // Redirect to login page on failure
     } finally {
-      setLoading(false); // Stop loading spinner
+      setLoading(false);
     }
   };
 
-  /**
-   * Triggers session verification on route changes.
-   */
   useEffect(() => {
     console.log('[DEBUG] Router path:', router.pathname);
-    verifySession().catch((err) =>
+
+    // Skip session verification for public routes
+    if (router.pathname === '/login') {
+      setLoading(false);
+      return;
+    }
+
+    verifySession().catch(err =>
       console.error('[ERROR] Failed to verify session during useEffect:', err.message)
     );
   }, [router.pathname]);
 
-  /**
-   * Show a loading spinner until session verification is complete.
-   */
   if (loading) return <p>Loading...</p>;
 
-  /**
-   * Render the app with a conditional Navbar.
-   */
   return (
     <>
       {!noNavbarRoutes.includes(router.pathname) && <Navbar />}
-      {isVerified ? <Component {...pageProps} /> : null}
+      {isVerified ? <Component {...pageProps} /> : router.pathname === '/login' ? <Component {...pageProps} /> : null}
     </>
   );
 }
