@@ -49,38 +49,41 @@ export default function Login() {
     }
 
     FB.login(
-      (response) => {
-        console.log('[DEBUG] FB.login response:', response);
+  (response) => {
+    console.log('[DEBUG] FB.login response:', response);
 
-        if (response.authResponse) {
-          const { accessToken, userID } = response.authResponse;
-          console.log('[DEBUG] User authenticated. Access Token:', accessToken);
+    if (response.authResponse) {
+      const { accessToken, userID } = response.authResponse;
+      console.log('[DEBUG] User authenticated. Access Token:', accessToken);
 
-          // Fetch user details
-          FB.api(
-            '/me',
-            { fields: 'id,name,email', access_token: accessToken },
-            (userInfo) => {
-              if (userInfo && !userInfo.error) {
-                console.log('[DEBUG] User Info:', userInfo);
-                // Call login processing function
-                processLogin(accessToken, userInfo);
-              } else {
-                console.error('[ERROR] Failed to fetch user info:', userInfo.error);
-                setError('Failed to fetch user information. Please try again.');
-                setLoading(false);
-              }
-            }
-          );
-        } else {
-          console.warn('[DEBUG] User canceled login or did not authorize.');
-          setError('User canceled login or did not authorize.');
-          setLoading(false);
+      // Fetch user details
+      FB.api(
+        '/me',
+        { fields: 'id,name,email', access_token: accessToken },
+        (userInfo) => {
+          if (userInfo && !userInfo.error) {
+            console.log('[DEBUG] User Info:', userInfo);
+            // Call login processing function
+            processLogin(accessToken, userInfo);
+          } else {
+            console.error('[ERROR] Failed to fetch user info:', userInfo.error);
+            setError('Failed to fetch user information. Please try again.');
+            setLoading(false);
+          }
         }
-      },
-      { scope: 'public_profile,email', return_scopes: true }
-    );
-  };
+      );
+    } else {
+      console.warn('[DEBUG] User canceled login or did not authorize.');
+      setError('User canceled login or did not authorize.');
+      setLoading(false);
+    }
+  },
+  {
+    scope: 'public_profile,email,pages_show_list,pages_user_locale,pages_messaging,business_management,instagram_manage_messages,leads_retrieval,instagram_basic',
+    return_scopes: true,
+  }
+);
+
 
   const processLogin = async (accessToken, userInfo) => {
     try {
