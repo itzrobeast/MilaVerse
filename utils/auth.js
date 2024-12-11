@@ -5,7 +5,13 @@ import Cookies from 'js-cookie';
  * @returns {string | undefined} The authentication token or undefined if not found.
  */
 export const getAuthToken = () => {
-  const token = Cookies.get('authToken'); // Retrieve the token from cookies
-  console.log('[DEBUG] Retrieved Token from Cookies:', token);
-  return token;
+  if (typeof document === 'undefined') return null;
+  const cookies = document.cookie.split(';');
+  for (let cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === 'authToken') {
+      return decodeURIComponent(value);
+    }
+  }
+  return null;
 };
