@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import Cookies from 'js-cookie'; // Import the Cookies library
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
