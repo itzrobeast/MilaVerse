@@ -100,6 +100,7 @@ export default function Login() {
       }
 
       console.log('[DEBUG] Login successful.');
+      Cookies.set('authToken', accessToken); // Set access token in cookie
       router.push('/dashboard'); // Redirect user to the dashboard
     } catch (err) {
       console.error('[ERROR] Login failed:', err.message);
