@@ -23,7 +23,7 @@ function MyApp({ Component, pageProps }) {
 
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
-        method: 'GET',
+        method: 'POST',
         credentials: 'include', // Include cookies in the request
         headers: {
           'Content-Type': 'application/json',
