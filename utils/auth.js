@@ -1,28 +1,35 @@
 /**
- * Verifies the Facebook session using the provided access token.
+ * Sends the Facebook access token to the backend for validation.
  * @param {string} accessToken - The Facebook access token.
  * @returns {Object | null} - The validated token data or null if invalid.
  */
 export const verifySession = async (accessToken) => {
   try {
-    console.log('[DEBUG] Verifying Facebook access token:', accessToken);
+    console.log('[DEBUG] Sending Facebook access token to backend for verification:', accessToken);
+
     if (!accessToken) {
-      throw new Error('No access token provided');
+      console.error('[ERROR] No access token provided.');
+      return null;
     }
 
-    const response = await fetch(
-      `https://graph.facebook.com/debug_token?input_token=${accessToken}&access_token=${process.env.NEXT_PUBLIC_FACEBOOK_APP_ID}|${process.env.NEXT_PUBLIC_FACEBOOK_APP_SECRET}`
-    );
+    const response = await fetch('/auth/verify-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: accessToken }),
+      credentials: 'include', // Send cookies if needed
+    });
 
     if (!response.ok) {
-      throw new Error(`Facebook token validation failed: ${response.statusText}`);
+      throw new Error(`Session verification failed: ${response.statusText}`);
     }
 
     const data = await response.json();
-    console.log('[DEBUG] Facebook Token Verified:', data);
-    return data.data; // Return validated token data
+    console.log('[DEBUG] Session verified successfully:', data);
+    return data; // Return validated session data
   } catch (error) {
-    console.error('[ERROR] Verifying Facebook session failed:', error.message);
+    console.error('[ERROR] Session verification failed:', error.message);
     return null;
   }
 };
