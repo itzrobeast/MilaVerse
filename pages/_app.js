@@ -3,12 +3,14 @@ import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
 import '../styles/globals.css';
 import { getAuthToken } from '../utils/auth';
+import { verifySession } from '../utils/auth';
 
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
   const noNavbarRoutes = ['/login', '/logout'];
   const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
   const verifySession = async () => {
     const token = getAuthToken(); // Retrieve the token from cookies
@@ -48,6 +50,30 @@ function MyApp({ Component, pageProps }) {
     }
   };
 
+
+
+  
+  useEffect(() => {
+    const fetchSession = async () => {
+      const userData = await verifySession();
+      setUser(userData); // Update user state
+    };
+
+    fetchSession();
+  }, []);
+
+  return (
+    <>
+      {/* Pass user state as a prop to all components */}
+      <Component {...pageProps} user={user} />
+    </>
+  );
+}
+
+
+
+
+  
   useEffect(() => {
     console.log('[DEBUG] Router path:', router.pathname);
 
