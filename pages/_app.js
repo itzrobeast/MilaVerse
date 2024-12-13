@@ -17,14 +17,13 @@ export default function MyApp({ Component, pageProps }) {
         return;
       }
 
-      res.cookie('authToken', accessToken, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-  sameSite: 'None', // Ensure cross-site cookies work
-  maxAge: 3600000, // 1 hour
-  domain: process.env.NODE_ENV === 'production' ? '.mila-verse.vercel.app' : undefined,
-});
-
+      const authToken = Cookies.get('authToken'); // Read the token from cookies
+      if (!authToken) {
+        console.log('[DEBUG] No authToken found in cookies. Redirecting to login...');
+        if (router.pathname !== '/login') router.push('/login');
+        setLoading(false);
+        return;
+      }
 
       try {
         console.log('[DEBUG] Verifying session with authToken from cookies...');
