@@ -3,22 +3,24 @@ import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
 import '../styles/globals.css';
 import { getAuthToken } from '../utils/auth';
-import { verifySession } from '../utils/auth';
 
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
-  const noNavbarRoutes = ['/login', '/logout'];
-  const [isVerified, setIsVerified] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
+  const noNavbarRoutes = ['/login', '/logout']; // Routes where Navbar is hidden
+  const [isVerified, setIsVerified] = useState(false); // Session verification state
+  const [loading, setLoading] = useState(true); // Loading state
+  const [user, setUser] = useState(null); // User state
 
+  /**
+   * Verify session with backend
+   */
   const verifySession = async () => {
-    const token = getAuthToken(); // Retrieve the token from cookies
+    const token = getAuthToken(); // Retrieve token (e.g., from cookies or local storage)
     console.log('[DEBUG] Retrieved Auth Token:', token);
 
     if (!token) {
       console.log('[DEBUG] No token found, redirecting to login...');
-      router.push('/login'); // Redirect to login page if no token exists
+      router.push('/login'); // Redirect to login if no token exists
       setLoading(false);
       return;
     }
@@ -29,7 +31,7 @@ function MyApp({ Component, pageProps }) {
         credentials: 'include', // Include cookies in the request
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`, // Send token in the header
+          Authorization: `Bearer ${token}`, // Include token in Authorization header
         },
       });
 
@@ -41,39 +43,19 @@ function MyApp({ Component, pageProps }) {
       const data = await res.json();
       console.log('[DEBUG] Session verified successfully:', data);
 
+      setUser(data.user); // Update user state with verified user data
       setIsVerified(true); // Mark session as verified
     } catch (error) {
       console.error('[ERROR] Session verification failed:', error.message);
-      router.push('/login'); // Redirect to login page on failure
+      router.push('/login'); // Redirect to login on failure
     } finally {
-      setLoading(false);
+      setLoading(false); // Stop loading spinner
     }
   };
 
-
-
-  
-  useEffect(() => {
-    const fetchSession = async () => {
-      const userData = await verifySession();
-      setUser(userData); // Update user state
-    };
-
-    fetchSession();
-  }, []);
-
-  return (
-    <>
-      {/* Pass user state as a prop to all components */}
-      <Component {...pageProps} user={user} />
-    </>
-  );
-}
-
-
-
-
-  
+  /**
+   * Run session verification on mount and when the route changes
+   */
   useEffect(() => {
     console.log('[DEBUG] Router path:', router.pathname);
 
@@ -83,17 +65,18 @@ function MyApp({ Component, pageProps }) {
       return;
     }
 
-    verifySession().catch(err =>
-      console.error('[ERROR] Failed to verify session during useEffect:', err.message)
-    );
+    verifySession();
   }, [router.pathname]);
 
+  // Display a loading spinner while verifying session
   if (loading) return <p>Loading...</p>;
 
   return (
     <>
+      {/* Show Navbar unless on specific routes */}
       {!noNavbarRoutes.includes(router.pathname) && <Navbar />}
-      {isVerified ? <Component {...pageProps} /> : router.pathname === '/login' ? <Component {...pageProps} /> : null}
+      {/* Pass user state as a prop to all components */}
+      <Component {...pageProps} user={user} />
     </>
   );
 }
