@@ -10,17 +10,27 @@ function MyApp({ Component, pageProps }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSession = async () => {
-      const userData = await verifySession();
+    const checkSession = async () => {
+      const facebookAccessToken = localStorage.getItem('facebookAccessToken'); // Retrieve the token
+      if (!facebookAccessToken) {
+        console.log('[DEBUG] No Facebook access token found. Redirecting to login...');
+        if (router.pathname !== '/login') router.push('/login'); // Redirect only if not already on the login page
+        setLoading(false);
+        return;
+      }
+
+      // Verify session with backend
+      const userData = await verifySession(facebookAccessToken);
       if (!userData) {
-        router.push('/login'); // Redirect to login if session is invalid
+        console.error('[DEBUG] Invalid session. Redirecting to login...');
+        if (router.pathname !== '/login') router.push('/login');
       } else {
         setUser(userData);
       }
       setLoading(false);
     };
 
-    fetchSession();
+    checkSession();
   }, [router]);
 
   if (loading) return <p>Loading...</p>;
