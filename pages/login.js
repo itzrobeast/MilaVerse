@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Cookies from 'js-cookie'; // Library to manage cookies
+import Cookies from 'js-cookie';
 
 export default function Login() {
-  const [loading, setLoading] = useState(false); // For button state
-  const [error, setError] = useState(null); // For displaying errors
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const router = useRouter();
 
-  // Load Facebook SDK on component mount
   useEffect(() => {
     if (typeof window === 'undefined' || document.getElementById('facebook-jssdk')) {
       console.log('[DEBUG] Facebook SDK already loaded.');
@@ -33,14 +32,13 @@ export default function Login() {
       }
     };
     script.onerror = () => {
-      console.error('[ERROR] Failed to load the Facebook SDK script.');
+      console.error('[ERROR] Failed to load Facebook SDK script.');
       setError('Failed to load Facebook SDK script.');
     };
     document.body.appendChild(script);
   }, []);
 
-  // Handle login button click
-  const handleLogin = async () => {
+  const handleLogin = () => {
     setLoading(true);
     setError(null);
 
@@ -51,52 +49,33 @@ export default function Login() {
       return;
     }
 
-    FB.login(
-      async (response) => {
-        console.log('[DEBUG] FB.login response:', response);
+    FB.login((response) => {
+      console.log('[DEBUG] FB.login response:', response);
 
-        if (response.authResponse) {
-          const { accessToken, userID } = response.authResponse;
-          console.log('[DEBUG] User authenticated. Access Token:', accessToken);
+      if (response.authResponse) {
+        const { accessToken } = response.authResponse;
+        console.log('[DEBUG] User authenticated. Access Token:', accessToken);
 
-          // Fetch user details using the Facebook Graph API
-          FB.api(
-            '/me',
-            { fields: 'id,name,email', access_token: accessToken },
-            async (userInfo) => {
-              if (userInfo && !userInfo.error) {
-                console.log('[DEBUG] User Info:', userInfo);
-
-                // Process login with backend
-                await processLogin(accessToken, userInfo);
-              } else {
-                console.error('[ERROR] Failed to fetch user info:', userInfo.error);
-                setError('Failed to fetch user information. Please try again.');
-                setLoading(false);
-              }
-            }
-          );
-        } else {
-          console.warn('[DEBUG] User canceled login or did not authorize.');
-          setError('User canceled login or did not authorize.');
-          setLoading(false);
-        }
-      },
-      {
-        scope: 'public_profile,email,pages_show_list,pages_messaging,business_management,instagram_manage_messages,leads_retrieval,instagram_basic',
-        return_scopes: true,
+        // Call an async helper function to process the login
+        processLogin(accessToken);
+      } else {
+        console.warn('[DEBUG] User canceled login or did not authorize.');
+        setError('User canceled login or did not authorize.');
+        setLoading(false);
       }
-    );
+    }, {
+      scope: 'public_profile,email,pages_show_list,pages_messaging,business_management,instagram_manage_messages,leads_retrieval,instagram_basic',
+      return_scopes: true,
+    });
   };
 
-  // Send login data to the backend
-  const processLogin = async (accessToken, userInfo) => {
+  const processLogin = async (accessToken) => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessToken, userInfo }),
-        credentials: 'include', // Ensures secure cookies are set
+        body: JSON.stringify({ accessToken }),
+        credentials: 'include',
       });
 
       if (!res.ok) {
@@ -105,9 +84,9 @@ export default function Login() {
       }
 
       console.log('[DEBUG] Login successful.');
-      Cookies.set('authToken', accessToken, { expires: 7 }); // Set access token in cookie with 7-day expiration
-      localStorage.setItem('facebookAccessToken', accessToken); // Save to localStorage for session verification
-      router.push('/dashboard'); // Redirect user to the dashboard
+      Cookies.set('authToken', accessToken, { expires: 7 }); // Save token in cookie with 7-day expiration
+      localStorage.setItem('facebookAccessToken', accessToken); // Save in localStorage for session persistence
+      router.push('/dashboard'); // Redirect to the dashboard
     } catch (err) {
       console.error('[ERROR] Login failed:', err.message);
       setError('Login failed. Please try again.');
@@ -130,3 +109,4 @@ export default function Login() {
     </div>
   );
 }
+
