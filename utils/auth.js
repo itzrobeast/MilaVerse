@@ -1,16 +1,17 @@
-
 /**
  * Verifies the session using the Facebook access token.
- * @returns {Object | null} The user object if session is valid, or null otherwise.
+ * @returns {Object | null} The user object if the session is valid, or null otherwise.
  */
 export const verifySession = async () => {
   try {
     // Retrieve Facebook access token from localStorage
     const facebookAccessToken = localStorage.getItem('facebookAccessToken');
     if (!facebookAccessToken) {
-      console.error('[ERROR] No Facebook access token found');
+      console.error('[ERROR] No Facebook access token found in localStorage.');
       return null; // No user session
     }
+
+    console.log('[DEBUG] Verifying Facebook access token...');
 
     // Validate token with Facebook's Graph API
     const response = await fetch(
@@ -22,20 +23,23 @@ export const verifySession = async () => {
     }
 
     const data = await response.json();
+    console.log('[DEBUG] Facebook token validation response:', data);
+
+    // Check if the token is valid
     if (!data || !data.data || !data.data.is_valid) {
-      console.error('[ERROR] Facebook token is invalid or expired');
+      console.error('[ERROR] Facebook token is invalid or expired.');
       return null; // Invalid session
     }
 
-    console.log('[DEBUG] Facebook Token Verified:', data.data);
+    console.log('[DEBUG] Facebook Token Verified Successfully:', data.data);
 
-    // If token is valid, return user information
+    // Return user information if the session is valid
     return {
       fb_id: data.data.user_id,
       scopes: data.data.scopes,
     };
   } catch (error) {
-    console.error('[ERROR] Verifying Facebook session:', error.message);
+    console.error('[ERROR] Verifying Facebook session failed:', error.message);
     return null; // Handle invalid or expired session
   }
 };
