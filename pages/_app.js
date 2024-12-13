@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Cookies from 'js-cookie'; // Client-side cookie management
+import Cookies from 'js-cookie';
 import '../styles/globals.css';
 
 export default function MyApp({ Component, pageProps }) {
@@ -9,7 +9,14 @@ export default function MyApp({ Component, pageProps }) {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    const publicPages = ['/login', '/']; // Define pages that don't require session verification
     const checkSession = async () => {
+      if (publicPages.includes(router.pathname)) {
+        console.log('[DEBUG] Skipping session verification for public page:', router.pathname);
+        setLoading(false);
+        return;
+      }
+
       const authToken = Cookies.get('authToken'); // Read the token from cookies
       if (!authToken) {
         console.log('[DEBUG] No authToken found in cookies. Redirecting to login...');
