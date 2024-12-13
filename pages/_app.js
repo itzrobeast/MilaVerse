@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import '../styles/globals.css'; // Ensure your styles are loaded
+import Cookies from 'js-cookie'; // Client-side cookie management
+import '../styles/globals.css';
 
 export default function MyApp({ Component, pageProps }) {
   const router = useRouter();
@@ -9,21 +10,20 @@ export default function MyApp({ Component, pageProps }) {
 
   useEffect(() => {
     const checkSession = async () => {
-      const facebookAccessToken = localStorage.getItem('facebookAccessToken');
-      if (!facebookAccessToken) {
-        console.log('[DEBUG] No Facebook access token found. Redirecting to login...');
+      const authToken = Cookies.get('authToken'); // Read the token from cookies
+      if (!authToken) {
+        console.log('[DEBUG] No authToken found in cookies. Redirecting to login...');
         if (router.pathname !== '/login') router.push('/login');
         setLoading(false);
         return;
       }
 
       try {
-        console.log('[DEBUG] Verifying session with access token...');
+        console.log('[DEBUG] Verifying session with authToken from cookies...');
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: facebookAccessToken }),
-          credentials: 'include', // Send cookies if needed
+          credentials: 'include', // Include cookies in request
         });
 
         if (!response.ok) {
