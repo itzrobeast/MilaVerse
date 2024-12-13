@@ -1,4 +1,3 @@
-import fetch from 'isomorphic-fetch';
 
 /**
  * Verifies the session using the Facebook access token.
