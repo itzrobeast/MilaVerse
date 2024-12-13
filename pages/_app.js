@@ -1,54 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Navbar from '../components/Navbar';
-import '../styles/globals.css';
 import { verifySession } from '../utils/auth';
 
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
-  const [user, setUser] = useState(null); // User data from session
-  const [loading, setLoading] = useState(true); // Loading state
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const facebookAccessToken = localStorage.getItem('facebookAccessToken'); // Retrieve the token
-        if (!facebookAccessToken) {
-          console.log('[DEBUG] No Facebook access token found. Redirecting to login...');
-          if (router.pathname !== '/login') router.push('/login'); // Redirect only if not already on the login page
-          return;
-        }
+    let isMounted = true;
 
-        console.log('[DEBUG] Verifying session with access token...');
-        const userData = await verifySession(facebookAccessToken); // Verify session
-        if (!userData) {
-          console.error('[DEBUG] Invalid session. Redirecting to login...');
-          if (router.pathname !== '/login') router.push('/login');
-        } else {
-          console.log('[DEBUG] Session verified successfully:', userData);
-          setUser(userData); // Set user state
-        }
-      } catch (error) {
-        console.error('[ERROR] Session verification failed:', error.message);
+    const checkSession = async () => {
+      const facebookAccessToken = localStorage.getItem('facebookAccessToken');
+      if (!facebookAccessToken) {
+        console.log('[DEBUG] No Facebook access token found. Redirecting to login...');
         if (router.pathname !== '/login') router.push('/login');
-      } finally {
-        setLoading(false); // Stop loading spinner
+        if (isMounted) setLoading(false);
+        return;
       }
+
+      console.log('[DEBUG] Verifying session with access token...');
+      const userData = await verifySession(facebookAccessToken);
+
+      if (!userData) {
+        console.error('[DEBUG] Invalid session. Redirecting to login...');
+        if (router.pathname !== '/login') router.push('/login');
+      } else {
+        console.log('[DEBUG] Session verified successfully:', userData);
+        if (isMounted) setUser(userData);
+      }
+      if (isMounted) setLoading(false);
     };
 
-    checkSession(); // Call session check on mount
+    checkSession();
+
+    return () => {
+      isMounted = false;
+    };
   }, [router]);
 
-  if (loading) return <p>Loading...</p>; // Show a loading spinner or message
+  if (loading) return <p>Loading...</p>;
 
-  return (
-    <>
-      {/* Render Navbar unless on login page */}
-      {router.pathname !== '/login' && <Navbar />}
-      {/* Pass user data to all pages */}
-      <Component {...pageProps} user={user} />
-    </>
-  );
+  return <Component {...pageProps} user={user} />;
 }
 
 export default MyApp;
