@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Cookies from 'js-cookie';
 import '../styles/globals.css';
-import { verifySession } from './utils/auth';
+import { verifySession } from '../utils/auth';
 
 export default function MyApp({ Component, pageProps }) {
   const router = useRouter();
