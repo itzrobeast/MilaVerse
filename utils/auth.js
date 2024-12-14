@@ -1,3 +1,6 @@
+import Cookies from 'js-cookie';
+
+
 export const verifySession = async () => {
   try {
     console.log('[DEBUG] Verifying session with backend...');
