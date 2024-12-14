@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Cookies from 'js-cookie';
 import '../styles/globals.css';
+import { verifySession } from './utils/auth';
 
 export default function MyApp({ Component, pageProps }) {
   const router = useRouter();
@@ -27,23 +28,16 @@ export default function MyApp({ Component, pageProps }) {
 
       try {
         console.log('[DEBUG] Verifying session with authToken from cookies...');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include', // Include cookies in request
-        });
-
-        if (!response.ok) {
-          console.error('[ERROR] Invalid session. Redirecting to login...');
-          if (router.pathname !== '/login') router.push('/login');
+        const verifiedUser = await verifySession();
+        if (verifiedUser) {
+          setUser(verifiedUser);
         } else {
-          const data = await response.json();
-          console.log('[DEBUG] Session verified successfully:', data);
-          setUser(data.user); // Assuming the backend returns user info
+          console.error('[ERROR] Invalid session. Redirecting to login...');
+          router.push('/login');
         }
       } catch (error) {
         console.error('[ERROR] Session verification failed:', error.message);
-        if (router.pathname !== '/login') router.push('/login');
+        router.push('/login');
       } finally {
         setLoading(false);
       }
