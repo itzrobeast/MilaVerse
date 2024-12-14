@@ -1,24 +1,10 @@
-/**
- * Sends the Facebook access token to the backend for validation.
- * @param {string} accessToken - The Facebook access token.
- * @returns {Object | null} - The validated token data or null if invalid.
- */
-export const verifySession = async (accessToken) => {
+export const verifySession = async () => {
   try {
-    console.log('[DEBUG] Sending Facebook access token to backend for verification:', accessToken);
-
-    if (!accessToken) {
-      console.error('[ERROR] No access token provided.');
-      return null;
-    }
-
-    const response = await fetch('/auth/verify-session', {
+    console.log('[DEBUG] Verifying session with backend...');
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ token: accessToken }),
-      credentials: 'include', // Send cookies if needed
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // Send cookies with request
     });
 
     if (!response.ok) {
@@ -26,8 +12,8 @@ export const verifySession = async (accessToken) => {
     }
 
     const data = await response.json();
-    console.log('[DEBUG] Session verified successfully:', data);
-    return data; // Return validated session data
+    console.log('[DEBUG] Session verified successfully:', data.user);
+    return data.user; // Return user object
   } catch (error) {
     console.error('[ERROR] Session verification failed:', error.message);
     return null;
