@@ -12,48 +12,50 @@ export default function Dashboard() {
 
   // Fetch business data from backend
   const fetchDashboardData = async () => {
-    try {
-      // Check for authToken in cookies
-      const authToken = Cookies.get('authToken');
-      if (!authToken) {
-        throw new Error('Authentication required. Redirecting to login.');
-      }
+  try {
+    // Debugging logs for cookies
+    const authToken = Cookies.get('authToken');
+    const userId = Cookies.get('userId');
+    console.log('[DEBUG] authToken:', authToken);
+    console.log('[DEBUG] userId:', userId);
 
-      // Check for userId in cookies
-      const userId = Cookies.get('userId');
-      if (!userId) {
-        throw new Error('User information missing. Please log in again.');
-      }
-
-      console.log(`[DEBUG] Fetching business data for userId: ${userId}`);
-
-      // Send GET request to backend with userId as query parameter
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business?userId=${userId}`,
-        {
-          method: 'GET',
-          credentials: 'include', // Include cookies in the request
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Failed to fetch business data: ${errorText}`);
-      }
-
-      const data = await res.json();
-      console.log('[DEBUG] Business data fetched successfully:', data);
-      setBusiness(data);
-    } catch (err) {
-      console.error('[ERROR] Fetching dashboard data:', err.message);
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    if (!authToken) {
+      throw new Error('Authentication required. Redirecting to login.');
     }
-  };
+
+    if (!userId) {
+      throw new Error('User information missing. Please log in again.');
+    }
+
+    console.log(`[DEBUG] Fetching business data for userId: ${userId}`);
+
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business?userId=${userId}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Failed to fetch business data: ${errorText}`);
+    }
+
+    const data = await res.json();
+    console.log('[DEBUG] Business data fetched successfully:', data);
+    setBusiness(data);
+  } catch (err) {
+    console.error('[ERROR] Fetching dashboard data:', err.message);
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Fetch business data on component mount
   useEffect(() => {
