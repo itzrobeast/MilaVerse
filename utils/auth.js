@@ -6,39 +6,28 @@ import Cookies from 'js-cookie';
  */
 export const verifySession = async () => {
   try {
-    // Retrieve cookies
     const authToken = Cookies.get('authToken');
-    const userId = Cookies.get('userId');
+    const userId = parseInt(Cookies.get('userId'), 10);
 
-    console.log('[DEBUG] Verifying session with cookies:', { authToken, userId });
-
-    // Validate cookie presence
-    if (!authToken || !userId) {
-      console.error('[ERROR] Missing authentication cookies.');
-      throw new Error('Authentication required. Please log in again.');
+    if (!authToken || isNaN(userId)) {
+      throw new Error('Missing authentication cookies or invalid userId.');
     }
 
-    // Send session verification request
     const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-session`, {
       method: 'POST',
-      credentials: 'include', // Include cookies with the request
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      credentials: 'include', // Ensure cookies are sent
+      headers: { 'Content-Type': 'application/json' },
     });
 
-    // Handle response
     if (!response.ok) {
-      const errorMessage = await response.text();
-      console.error('[ERROR] Session verification failed:', errorMessage);
-      throw new Error(errorMessage || 'Session verification failed.');
+      throw new Error('Session verification failed.');
     }
 
     const data = await response.json();
-    console.log('[DEBUG] Session verified successfully:', data);
-    return data.user; // Return the verified user object
+    console.log('[DEBUG] Session verified:', data);
+    return data.user; // Return user data
   } catch (error) {
-    console.error('[ERROR] Session verification encountered an error:', error.message);
-    return null; // Return null on failure
+    console.error('[ERROR] Session verification failed:', error.message);
+    return null;
   }
 };
