@@ -2,9 +2,8 @@ import React from "react";
 
 export default function BusinessSettings({
   business,
-  vonageNumber,
   handleSave,
-  handleInputChange,
+  handleInputChange
 }) {
   return (
     <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg">
@@ -12,6 +11,7 @@ export default function BusinessSettings({
         Business Settings
       </h2>
       <form className="space-y-6" onSubmit={handleSave}>
+
         {/* Business Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
@@ -35,8 +35,8 @@ export default function BusinessSettings({
           </label>
           <input
             type="email"
-            name="email"
-            value={business.email || ""}
+            name="contact_email"
+            value={business.contact_email || ""}
             onChange={handleInputChange}
             placeholder="Enter contact email"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -59,14 +59,14 @@ export default function BusinessSettings({
           />
         </div>
 
-        {/* AI Knowledge */}
+        {/* AI Knowledge Base */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            AI Knowledge
+            AI Knowledge Base
           </label>
           <textarea
-            name="aiKnowledge"
-            value={business.aiKnowledge || ""}
+            name="ai_knowledge_base"
+            value={business.ai_knowledge_base || ""}
             onChange={handleInputChange}
             placeholder="Enter AI-specific knowledge or FAQs"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -95,8 +95,8 @@ export default function BusinessSettings({
             Insurance Policies
           </label>
           <textarea
-            name="insurancePolicies"
-            value={business.insurancePolicies || ""}
+            name="insurance_policies"
+            value={business.insurance_policies || ""}
             onChange={handleInputChange}
             placeholder="Enter insurance policies (e.g., coverage details)"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -104,28 +104,29 @@ export default function BusinessSettings({
           />
         </div>
 
-        {/* Page ID */}
+        {/* Page ID (Read Only) */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Page ID (Read Only)
           </label>
           <input
             type="text"
-            name="pageId"
-            value={business.pageId || "Not Assigned"}
+            name="page_id"
+            value={business.page_id || "Not Assigned"}
             readOnly
             className="w-full px-4 py-2 border bg-gray-100 rounded-lg shadow-sm text-gray-500 cursor-not-allowed"
           />
         </div>
 
-        {/* Vonage Business Number */}
+        {/* Vonage Business Phone Number (Read Only) */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Your Mila Business Phone Number
           </label>
           <input
             type="text"
-            value={vonageNumber || "Loading..."}
+            name="vonage_number"
+            value={business.vonage_number || "Loading..."}
             readOnly
             className="w-full px-4 py-2 border bg-gray-100 rounded-lg shadow-sm text-gray-500 cursor-not-allowed"
           />
