@@ -13,21 +13,15 @@ export default function Dashboard() {
   // Fetch business data from backend
   const fetchDashboardData = async () => {
   try {
-    // Debugging logs for cookies
     const authToken = Cookies.get('authToken');
     const userId = Cookies.get('userId');
+
     console.log('[DEBUG] authToken:', authToken);
     console.log('[DEBUG] userId:', userId);
 
-    if (!authToken) {
+    if (!authToken || !userId) {
       throw new Error('Authentication required. Redirecting to login.');
     }
-
-    if (!userId) {
-      throw new Error('User information missing. Please log in again.');
-    }
-
-    console.log(`[DEBUG] Fetching business data for userId: ${userId}`);
 
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business?userId=${userId}`,
@@ -41,16 +35,16 @@ export default function Dashboard() {
     );
 
     if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`Failed to fetch business data: ${errorText}`);
+      throw new Error('Failed to fetch business data.');
     }
 
     const data = await res.json();
-    console.log('[DEBUG] Business data fetched successfully:', data);
     setBusiness(data);
-  } catch (err) {
-    console.error('[ERROR] Fetching dashboard data:', err.message);
-    setError(err.message);
+    console.log('[DEBUG] Business data:', data);
+  } catch (error) {
+    console.error('[ERROR] Fetching dashboard data failed:', error.message);
+    setError(error.message);
+    router.push('/login'); // Redirect to login on failure
   } finally {
     setLoading(false);
   }
