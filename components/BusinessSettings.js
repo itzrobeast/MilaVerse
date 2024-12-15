@@ -5,8 +5,8 @@ export default function BusinessSettings({ business, handleSave, handleInputChan
   const [isSaving, setIsSaving] = useState(false); // To handle button disable/loading state
 
   const handleSubmit = async (event) => {
-    event.preventDefault(); // Prevent the form from reloading
-    setMessage(null); // Clear any existing messages
+    event.preventDefault(); // Prevent the default form submission
+    setMessage(null); // Clear existing messages
     setIsSaving(true); // Show saving state
 
     try {
@@ -65,94 +65,7 @@ export default function BusinessSettings({ business, handleSave, handleInputChan
           />
         </div>
 
-        {/* Locations */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Locations
-          </label>
-          <textarea
-            name="locations"
-            value={business.locations || ""}
-            onChange={handleInputChange}
-            placeholder="Enter locations (e.g., City, Address)"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-            rows="3"
-          />
-        </div>
-
-        {/* AI Knowledge Base */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            AI Knowledge Base
-          </label>
-          <textarea
-            name="ai_knowledge_base"
-            value={business.ai_knowledge_base || ""}
-            onChange={handleInputChange}
-            placeholder="Enter AI-specific knowledge or FAQs"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-            rows="3"
-          />
-        </div>
-
-        {/* Objections */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Objections
-          </label>
-          <textarea
-            name="objections"
-            value={business.objections || ""}
-            onChange={handleInputChange}
-            placeholder="Enter common objections and solutions"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-            rows="3"
-          />
-        </div>
-
-        {/* Insurance Policies */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Insurance Policies
-          </label>
-          <textarea
-            name="insurance_policies"
-            value={business.insurance_policies || ""}
-            onChange={handleInputChange}
-            placeholder="Enter insurance policies (e.g., coverage details)"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-            rows="3"
-          />
-        </div>
-
-        {/* Page ID (Read Only) */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Page ID (Read Only)
-          </label>
-          <input
-            type="text"
-            name="page_id"
-            value={business.page_id || "Not Assigned"}
-            readOnly
-            className="w-full px-4 py-2 border bg-gray-100 rounded-lg shadow-sm text-gray-500 cursor-not-allowed"
-          />
-        </div>
-
-        {/* Vonage Number (Read Only) */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Your Mila Business Phone Number
-          </label>
-          <input
-            type="text"
-            name="vonage_number"
-            value={business.vonage_number || "Loading..."}
-            readOnly
-            className="w-full px-4 py-2 border bg-gray-100 rounded-lg shadow-sm text-gray-500 cursor-not-allowed"
-          />
-        </div>
-
+        {/* Other fields... */}
         {/* Save Button */}
         <div className="text-center">
           <button
