@@ -11,25 +11,22 @@ export default function Dashboard() {
   const router = useRouter();
 
   // Fetch business data from backend
- const fetchDashboardData = async () => {
+const fetchDashboardData = async () => {
   try {
-    // Retrieve cookies
     const authToken = Cookies.get('authToken');
-    const userId = Cookies.get('userId'); // Fetch userId from cookies
+    const userId = Cookies.get('userId'); // Fetch `userId` from cookies
 
     console.log('[DEBUG] Cookies on Dashboard Load:', { authToken, userId });
 
-    // Check for missing credentials
     if (!authToken || !userId) {
       throw new Error('Authentication required. Redirecting to login.');
     }
 
-    // Pass `userId` as a query parameter
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business?userId=${userId}`,
       {
         method: 'GET',
-        credentials: 'include', // Ensure cookies are sent
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -47,7 +44,7 @@ export default function Dashboard() {
   } catch (error) {
     console.error('[ERROR] Fetching dashboard data failed:', error.message);
     setError(error.message);
-    router.push('/login'); // Redirect to login if data fetch fails
+    router.push('/login'); // Redirect to login on error
   } finally {
     setLoading(false);
   }
