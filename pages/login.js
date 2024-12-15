@@ -76,38 +76,45 @@ export default function Login() {
 
   // Process login with the backend
   const processLogin = async (accessToken) => {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken }),
-      credentials: 'include', // Ensure cookies are sent
-    });
+    try {
+      console.log('[DEBUG] Sending login request with accessToken:', accessToken);
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`Backend Error: ${errorText}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken }),
+        credentials: 'include', // Ensure cookies are sent
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('[ERROR] Backend returned an error:', errorText);
+        throw new Error(`Backend Error: ${errorText}`);
+      }
+
+      const { userId } = await res.json(); // Parse userId from the response
+
+      console.log('[DEBUG] Backend login response:', { userId });
+
+      if (!userId) {
+        console.error('[ERROR] userId is missing from the backend response.');
+        throw new Error('Login failed. No userId received.');
+      }
+
+      // Store `authToken` and `userId` in cookies
+      Cookies.set('authToken', accessToken, { expires: 7 });
+      Cookies.set('userId', userId.toString(), { expires: 7 }); // Ensure it's stored as a string
+
+      console.log('[DEBUG] Cookies after login:', document.cookie);
+
+      router.push('/dashboard');
+    } catch (err) {
+      console.error('[ERROR] Login failed:', err.message);
+      setError('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
-
-    const { userId } = await res.json(); // Parse userId from the response
-
-    console.log('[DEBUG] Login successful:', { userId, accessToken });
-
-    // Store `authToken` and `userId` in cookies
-    Cookies.set('authToken', accessToken, { expires: 7 });
-    Cookies.set('userId', userId.toString(), { expires: 7 }); // Ensure it's stored as a string
-
-    console.log('[DEBUG] Cookies after login:', document.cookie);
-
-    router.push('/dashboard');
-  } catch (err) {
-    console.error('[ERROR] Login failed:', err.message);
-    setError('Login failed. Please try again.');
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white">
