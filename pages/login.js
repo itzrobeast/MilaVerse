@@ -76,38 +76,38 @@ export default function Login() {
 
   // Process login with the backend
   const processLogin = async (accessToken) => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessToken }),
-        credentials: 'include',
-      });
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken }),
+      credentials: 'include', // Ensure cookies are sent
+    });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Backend Error: ${errorText}`);
-      }
-
-      const { userId } = await response.json();
-
-      console.log('[DEBUG] Login successful:', { userId, accessToken });
-
-      // Set authentication cookies
-      Cookies.set('authToken', accessToken, { expires: 7 });
-      Cookies.set('userId', userId, { expires: 7 });
-
-      console.log('[DEBUG] Cookies after login:', document.cookie);
-
-      // Redirect to dashboard
-      router.push('/dashboard');
-    } catch (err) {
-      console.error('[ERROR] Login failed:', err.message);
-      setError('Login failed. Please try again.');
-    } finally {
-      setLoading(false);
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Backend Error: ${errorText}`);
     }
-  };
+
+    const { userId } = await res.json(); // Parse userId from the response
+
+    console.log('[DEBUG] Login successful:', { userId, accessToken });
+
+    // Store `authToken` and `userId` in cookies
+    Cookies.set('authToken', accessToken, { expires: 7 });
+    Cookies.set('userId', userId.toString(), { expires: 7 }); // Ensure it's stored as a string
+
+    console.log('[DEBUG] Cookies after login:', document.cookie);
+
+    router.push('/dashboard');
+  } catch (err) {
+    console.error('[ERROR] Login failed:', err.message);
+    setError('Login failed. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white">
