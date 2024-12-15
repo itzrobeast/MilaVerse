@@ -12,43 +12,44 @@ export default function Dashboard() {
 
   // Fetch business data from backend
   const fetchDashboardData = async () => {
-    try {
-      const authToken = Cookies.get('authToken');
-      const userId = Cookies.get('userId');
+  try {
+    const authToken = Cookies.get('authToken');
+    const userId = parseInt(Cookies.get('userId'), 10);
 
-      console.log('[DEBUG] Cookies on Dashboard Load:', { authToken, userId });
-
-      if (!authToken || !userId) {
-        throw new Error('Authentication required. Redirecting to login.');
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business?userId=${userId}`,
-        {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to fetch business data: ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('[DEBUG] Business data fetched successfully:', data);
-      setBusiness(data);
-    } catch (err) {
-      console.error('[ERROR] Fetching dashboard data failed:', err.message);
-      setError(err.message);
-      router.push('/login'); // Redirect to login on authentication failure
-    } finally {
-      setLoading(false);
+    if (!authToken || isNaN(userId)) {
+      throw new Error('Authentication required. Redirecting to login.');
     }
-  };
+
+    console.log('[DEBUG] Cookies on Dashboard Load:', { authToken, userId });
+
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business?userId=${userId}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Failed to fetch business data: ${errorText}`);
+    }
+
+    const data = await res.json();
+    console.log('[DEBUG] Business data fetched successfully:', data);
+    setBusiness(data);
+  } catch (error) {
+    console.error('[ERROR] Fetching dashboard data failed:', error.message);
+    setError(error.message);
+    router.push('/login'); // Redirect to login on error
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Handle saving business data
   const handleSave = async (updatedBusiness) => {
