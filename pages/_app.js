@@ -10,29 +10,35 @@ export default function MyApp({ Component, pageProps }) {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const publicPages = ['/login', '/']; // Define pages that don't require session verification
     const checkSession = async () => {
+      const publicPages = ['/login', '/']; // Define public pages that don't require session verification
+
+      // Skip verification for public pages
       if (publicPages.includes(router.pathname)) {
-        console.log('[DEBUG] Skipping session verification for public page:', router.pathname);
+        console.log('[DEBUG] Public page detected:', router.pathname);
         setLoading(false);
         return;
       }
 
-      const authToken = Cookies.get('authToken'); // Read the token from cookies
-       const userId = Cookies.get('userId');
-  console.log('[DEBUG] Cookies on App Load:', { authToken, userId });
-}, []);
-      if (!authToken) {
-        console.log('[DEBUG] No authToken found in cookies. Redirecting to login...');
-        if (router.pathname !== '/login') router.push('/login');
+      // Retrieve cookies
+      const authToken = Cookies.get('authToken');
+      const userId = Cookies.get('userId');
+      console.log('[DEBUG] Cookies on App Load:', { authToken, userId });
+
+      // Redirect to login if no authToken is found
+      if (!authToken || !userId) {
+        console.log('[DEBUG] Missing authToken or userId. Redirecting to login...');
+        router.push('/login');
         setLoading(false);
         return;
       }
 
+      // Verify session with the backend
       try {
-        console.log('[DEBUG] Verifying session with authToken from cookies...');
+        console.log('[DEBUG] Verifying session...');
         const verifiedUser = await verifySession();
         if (verifiedUser) {
+          console.log('[DEBUG] Session verified successfully:', verifiedUser);
           setUser(verifiedUser);
         } else {
           console.error('[ERROR] Invalid session. Redirecting to login...');
@@ -47,9 +53,12 @@ export default function MyApp({ Component, pageProps }) {
     };
 
     checkSession();
-  }, [router]);
+  }, [router.pathname]); // Only re-run when the route changes
 
-  if (loading) return <p>Loading...</p>; // Show a loading state while checking session
+  // Show a loading state while verifying session
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   return <Component {...pageProps} user={user} />;
 }
