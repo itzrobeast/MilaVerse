@@ -1,13 +1,38 @@
-import React from "react";
+import React, { useState } from "react";
 
 export default function BusinessSettings({ business, handleSave, handleInputChange }) {
+  const [message, setMessage] = useState(null); // To store success or error message
+  const [isSaving, setIsSaving] = useState(false); // To handle button disable/loading state
+
+  const handleSubmit = async (event) => {
+    event.preventDefault(); // Prevent form submission reload
+    setMessage(null); // Clear any existing messages
+    setIsSaving(true);
+
+    try {
+      // Call handleSave (assumes this triggers the backend API call)
+      const result = await handleSave();
+
+      if (result?.success) {
+        setMessage({ type: "success", text: "Business settings updated successfully!" });
+      } else {
+        setMessage({ type: "error", text: result?.message || "Failed to update settings. Please try again." });
+      }
+    } catch (error) {
+      console.error("Error saving business settings:", error);
+      setMessage({ type: "error", text: "An unexpected error occurred. Please try again later." });
+    } finally {
+      setIsSaving(false); // Re-enable the Save button
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
         Business Settings
       </h2>
 
-      <form className="space-y-6" onSubmit={handleSave}>
+      <form className="space-y-6" onSubmit={handleSubmit}>
         {/* Business Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
@@ -132,11 +157,27 @@ export default function BusinessSettings({ business, handleSave, handleInputChan
         <div className="text-center">
           <button
             type="submit"
-            className="w-full sm:w-2/3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300"
+            disabled={isSaving}
+            className={`w-full sm:w-2/3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 ${
+              isSaving ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
-            Save Changes
+            {isSaving ? "Saving..." : "Save Changes"}
           </button>
         </div>
+
+        {/* Success/Error Message */}
+        {message && (
+          <div
+            className={`mt-4 p-3 rounded-lg text-center ${
+              message.type === "success"
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+            }`}
+          >
+            {message.text}
+          </div>
+        )}
       </form>
     </div>
   );
