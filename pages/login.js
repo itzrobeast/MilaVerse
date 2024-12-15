@@ -90,6 +90,8 @@ export default function Login() {
     // Store `authToken` and `userId` in cookies
     Cookies.set('authToken', accessToken, { expires: 7 });
     Cookies.set('userId', userId, { expires: 7 }); // Store userId properly
+    // Log the cookies to verify they are set
+    console.log('[DEBUG] Cookies after login:', document.cookie);
 
     router.push('/dashboard');
   } catch (err) {
