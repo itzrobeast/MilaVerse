@@ -11,13 +11,12 @@ export default function Dashboard() {
   const router = useRouter();
 
   // Fetch business data from backend
-  const fetchDashboardData = async () => {
+ const fetchDashboardData = async () => {
   try {
     const authToken = Cookies.get('authToken');
-    const userId = Cookies.get('userId');
+    const userId = Cookies.get('userId'); // Retrieve userId from cookies
 
-    console.log('[DEBUG] authToken:', authToken);
-    console.log('[DEBUG] userId:', userId);
+    console.log('[DEBUG] Cookies on Dashboard Load:', { authToken, userId });
 
     if (!authToken || !userId) {
       throw new Error('Authentication required. Redirecting to login.');
@@ -35,16 +34,17 @@ export default function Dashboard() {
     );
 
     if (!res.ok) {
-      throw new Error('Failed to fetch business data.');
+      const errorText = await res.text();
+      throw new Error(`Failed to fetch business data: ${errorText}`);
     }
 
     const data = await res.json();
+    console.log('[DEBUG] Business data fetched successfully:', data);
     setBusiness(data);
-    console.log('[DEBUG] Business data:', data);
   } catch (error) {
     console.error('[ERROR] Fetching dashboard data failed:', error.message);
     setError(error.message);
-    router.push('/login'); // Redirect to login on failure
+    router.push('/login'); // Redirect to login if data fetch fails
   } finally {
     setLoading(false);
   }
