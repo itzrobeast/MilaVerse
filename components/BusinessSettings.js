@@ -7,114 +7,139 @@ export default function BusinessSettings({
   handleInputChange,
 }) {
   return (
-    <div>
+    <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+        Business Settings
+      </h2>
       <form className="space-y-6" onSubmit={handleSave}>
         {/* Business Name */}
         <div>
-          <label className="block text-sm font-medium">Business Name</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Business Name
+          </label>
           <input
             type="text"
             name="name"
             value={business.name || ""}
             onChange={handleInputChange}
             placeholder="Enter your business name"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+            required
           />
         </div>
 
         {/* Contact Email */}
         <div>
-          <label className="block text-sm font-medium">Contact Email</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Contact Email
+          </label>
           <input
             type="email"
             name="email"
             value={business.email || ""}
             onChange={handleInputChange}
             placeholder="Enter contact email"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+            required
           />
         </div>
 
         {/* Locations */}
         <div>
-          <label className="block text-sm font-medium">Locations</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Locations
+          </label>
           <textarea
             name="locations"
             value={business.locations || ""}
             onChange={handleInputChange}
-            placeholder="Enter locations"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
+            placeholder="Enter locations (e.g., City, Address)"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+            rows="3"
           />
         </div>
 
         {/* AI Knowledge */}
         <div>
-          <label className="block text-sm font-medium">AI Knowledge</label>
+          <label className="block text-sm font-medium text-gray-700">
+            AI Knowledge
+          </label>
           <textarea
             name="aiKnowledge"
             value={business.aiKnowledge || ""}
             onChange={handleInputChange}
-            placeholder="Enter AI-specific knowledge"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
+            placeholder="Enter AI-specific knowledge or FAQs"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+            rows="3"
           />
         </div>
 
         {/* Objections */}
         <div>
-          <label className="block text-sm font-medium">Objections</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Objections
+          </label>
           <textarea
             name="objections"
             value={business.objections || ""}
             onChange={handleInputChange}
-            placeholder="Enter objections"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
+            placeholder="Enter common objections and solutions"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+            rows="3"
           />
         </div>
 
         {/* Insurance Policies */}
         <div>
-          <label className="block text-sm font-medium">Insurance Policies</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Insurance Policies
+          </label>
           <textarea
             name="insurancePolicies"
             value={business.insurancePolicies || ""}
             onChange={handleInputChange}
-            placeholder="Enter insurance policies"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
+            placeholder="Enter insurance policies (e.g., coverage details)"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+            rows="3"
           />
         </div>
 
         {/* Page ID */}
         <div>
-          <label className="block text-sm font-medium">Page ID (Read Only)</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Page ID (Read Only)
+          </label>
           <input
             type="text"
             name="pageId"
-            value={business.pageId || ""}
+            value={business.pageId || "Not Assigned"}
             readOnly
-            className="w-full px-4 py-2 border bg-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-2 border bg-gray-100 rounded-lg shadow-sm text-gray-500 cursor-not-allowed"
           />
         </div>
 
         {/* Vonage Business Number */}
         <div>
-          <label className="block text-sm font-medium">
+          <label className="block text-sm font-medium text-gray-700">
             Your Mila Business Phone Number
           </label>
           <input
             type="text"
             value={vonageNumber || "Loading..."}
             readOnly
-            className="w-full px-4 py-2 border bg-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-2 border bg-gray-100 rounded-lg shadow-sm text-gray-500 cursor-not-allowed"
           />
         </div>
 
         {/* Save Button */}
-        <button
-          type="submit"
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
-        >
-          Save Changes
-        </button>
+        <div className="text-center">
+          <button
+            type="submit"
+            className="w-full sm:w-2/3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300"
+          >
+            Save Changes
+          </button>
+        </div>
       </form>
     </div>
   );
