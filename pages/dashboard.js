@@ -13,20 +13,23 @@ export default function Dashboard() {
   // Fetch business data from backend
  const fetchDashboardData = async () => {
   try {
+    // Retrieve cookies
     const authToken = Cookies.get('authToken');
-    const userId = Cookies.get('userId'); // Retrieve userId from cookies
+    const userId = Cookies.get('userId'); // Fetch userId from cookies
 
     console.log('[DEBUG] Cookies on Dashboard Load:', { authToken, userId });
 
+    // Check for missing credentials
     if (!authToken || !userId) {
       throw new Error('Authentication required. Redirecting to login.');
     }
 
+    // Pass `userId` as a query parameter
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business?userId=${userId}`,
       {
         method: 'GET',
-        credentials: 'include',
+        credentials: 'include', // Ensure cookies are sent
         headers: {
           'Content-Type': 'application/json',
         },
@@ -49,6 +52,7 @@ export default function Dashboard() {
     setLoading(false);
   }
 };
+
 
 
   // Fetch business data on component mount
