@@ -4,15 +4,12 @@ export default function BusinessSettings({ business, handleSave, handleInputChan
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Wrap your save logic in this local form handler:
   const onSubmit = async (e) => {
-    e.preventDefault(); // prevent default form submission
+    e.preventDefault();
     setSuccessMessage("");
     setErrorMessage("");
 
     try {
-      // handleSave is passed in from the parent; if it returns a promise,
-      // we can await it to know when the update is complete.
       await handleSave(business);
       setSuccessMessage("Business settings updated successfully!");
     } catch (err) {
@@ -27,7 +24,7 @@ export default function BusinessSettings({ business, handleSave, handleInputChan
         Business Settings
       </h2>
 
-      {/* Success and Error Messages */}
+      {/* Display success/error messages */}
       {successMessage && (
         <div className="bg-green-100 text-green-800 px-4 py-2 mb-4 rounded">
           {successMessage}
@@ -173,3 +170,4 @@ export default function BusinessSettings({ business, handleSave, handleInputChan
     </div>
   );
 }
+
