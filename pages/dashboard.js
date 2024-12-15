@@ -11,11 +11,12 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
   const router = useRouter();
 
+  // On component mount, fetch business data
   useEffect(() => {
     fetchBusinessData();
   }, []);
 
-  // 1. Fetch general business data from /get-business
+  // 1. Fetch the main business data
   const fetchBusinessData = async () => {
     try {
       const authToken = Cookies.get('authToken');
@@ -41,7 +42,7 @@ export default function Dashboard() {
       console.log('[DEBUG] Business data fetched successfully:', data);
       setBusiness(data);
 
-      // After fetching business data, fetch the Vonage number in parallel
+      // After that, fetch the Vonage number in parallel
       fetchVonageNumber(data.id || userId);
 
     } catch (err) {
@@ -53,7 +54,7 @@ export default function Dashboard() {
     }
   };
 
-  // 2. Fetch the Vonage number separately from /get-vonage-number
+  // 2. Fetch the Vonage number from a separate table
   const fetchVonageNumber = async (businessId) => {
     try {
       const res = await fetch(
@@ -77,8 +78,6 @@ export default function Dashboard() {
   const handleSave = async (updatedBusiness) => {
     try {
       console.log('[DEBUG] Updating business data:', updatedBusiness);
-
-      // STILL call /get-business/update-business for the business table
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business/update-business`,
         {
@@ -96,15 +95,17 @@ export default function Dashboard() {
 
       const updatedData = await response.json();
       console.log('[DEBUG] Business updated successfully:', updatedData);
-      // updatedData.data is typically an array from Supabase
+      // Supabase might return an array of updated rows in updatedData.data
       setBusiness(updatedData.data?.[0] || {});
+      return true; // Indicate success
     } catch (err) {
       console.error('[ERROR] Updating business data failed:', err.message);
       setError(err.message);
+      throw err; // Rethrow so the child component can catch the error
     }
   };
 
-  // Handle input changes in the BusinessSettings component
+  // Handle input changes for the BusinessSettings form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setBusiness((prev) => ({ ...prev, [name]: value }));
@@ -133,10 +134,7 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
         <BusinessSettings
           business={{ ...business, vonage_number: vonageNumber }}
-          handleSave={(e) => {
-            e.preventDefault();
-            handleSave(business);
-          }}
+          handleSave={handleSave}
           handleInputChange={handleInputChange}
         />
       </div>
