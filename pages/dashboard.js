@@ -6,16 +6,16 @@ import BusinessSettings from '../components/BusinessSettings';
 
 export default function Dashboard() {
   const [business, setBusiness] = useState({});
+  const [vonageNumber, setVonageNumber] = useState('Loading...');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const router = useRouter();
 
-  // Fetch business data on component mount
   useEffect(() => {
     fetchBusinessData();
   }, []);
 
-  // Fetch business data from backend
+  // 1. Fetch general business data from /get-business
   const fetchBusinessData = async () => {
     try {
       const authToken = Cookies.get('authToken');
@@ -29,13 +29,7 @@ export default function Dashboard() {
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business?user_id=${userId}`,
-        {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+        { credentials: 'include' }
       );
 
       if (!response.ok) {
@@ -46,12 +40,36 @@ export default function Dashboard() {
       const data = await response.json();
       console.log('[DEBUG] Business data fetched successfully:', data);
       setBusiness(data);
-    } catch (error) {
-      console.error('[ERROR] Fetching business data failed:', error.message);
-      setError(error.message);
-      router.push('/login'); // Redirect to login on error
+
+      // After fetching business data, fetch the Vonage number in parallel
+      fetchVonageNumber(data.id || userId);
+
+    } catch (err) {
+      console.error('[ERROR] Fetching business data failed:', err.message);
+      setError(err.message);
+      router.push('/login');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 2. Fetch the Vonage number separately from /get-vonage-number
+  const fetchVonageNumber = async (businessId) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-vonage-number?business_id=${businessId}`,
+        { credentials: 'include' }
+      );
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Failed to fetch Vonage number: ${errorText}`);
+      }
+      const data = await res.json();
+      console.log('[DEBUG] Vonage number fetched successfully:', data);
+      setVonageNumber(data.vonage_number || 'Not Assigned');
+    } catch (err) {
+      console.error('[ERROR] Fetching Vonage number failed:', err.message);
+      setVonageNumber('Error fetching Vonage number');
     }
   };
 
@@ -60,14 +78,13 @@ export default function Dashboard() {
     try {
       console.log('[DEBUG] Updating business data:', updatedBusiness);
 
+      // STILL call /get-business/update-business for the business table
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business/update-business`,
         {
           method: 'PUT',
           credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatedBusiness),
         }
       );
@@ -79,8 +96,8 @@ export default function Dashboard() {
 
       const updatedData = await response.json();
       console.log('[DEBUG] Business updated successfully:', updatedData);
-      setBusiness(updatedData.data?.[0] || {}); 
-      // updatedData.data is usually an array from Supabase .select('*')
+      // updatedData.data is typically an array from Supabase
+      setBusiness(updatedData.data?.[0] || {});
     } catch (err) {
       console.error('[ERROR] Updating business data failed:', err.message);
       setError(err.message);
@@ -90,13 +107,9 @@ export default function Dashboard() {
   // Handle input changes in the BusinessSettings component
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setBusiness((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setBusiness((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Render loading, error, or the main dashboard UI
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -119,7 +132,7 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto p-6">
         <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
         <BusinessSettings
-          business={business}
+          business={{ ...business, vonage_number: vonageNumber }}
           handleSave={(e) => {
             e.preventDefault();
             handleSave(business);
