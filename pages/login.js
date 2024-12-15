@@ -70,30 +70,36 @@ export default function Login() {
   };
 
   const processLogin = async (accessToken) => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessToken }),
-        credentials: 'include',
-      });
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken }),
+      credentials: 'include', // Include cookies
+    });
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Backend Error: ${errorText}`);
-      }
-
-      console.log('[DEBUG] Login successful.');
-      Cookies.set('authToken', accessToken, { expires: 7 }); // Save token in cookie with 7-day expiration
-      localStorage.setItem('facebookAccessToken', accessToken); // Save in localStorage for session persistence
-      router.push('/dashboard'); // Redirect to the dashboard
-    } catch (err) {
-      console.error('[ERROR] Login failed:', err.message);
-      setError('Login failed. Please try again.');
-    } finally {
-      setLoading(false);
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Backend Error: ${errorText}`);
     }
-  };
+
+    const { userId } = await res.json(); // Ensure backend sends userId in response
+
+    console.log('[DEBUG] Login successful:', { userId, accessToken });
+
+    // Set cookies explicitly for debugging
+    Cookies.set('authToken', accessToken, { expires: 7 });
+    Cookies.set('userId', userId, { expires: 7 });
+
+    router.push('/dashboard');
+  } catch (err) {
+    console.error('[ERROR] Login failed:', err.message);
+    setError('Login failed. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white">
