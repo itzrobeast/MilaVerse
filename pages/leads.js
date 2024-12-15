@@ -12,7 +12,7 @@ export default function Leads() {
 
   // Fetch user ID, business ID, and auth token from cookies
   const userId = Cookies.get('userId');
-  const businessId = Cookies.get('businessId'); // Ensure this cookie is set
+  const businessId = Cookies.get('businessId');
   const authToken = Cookies.get('authToken');
 
   // Debugging: Log the values
@@ -124,6 +124,12 @@ export default function Leads() {
         <h1 className="text-4xl font-bold">Leads Dashboard</h1>
         <p className="text-lg mt-2 opacity-90">Manage and review your business leads</p>
       </header>
+
+      {/* Business Selection (If Multiple Businesses) */}
+      {/* 
+        Optionally, add a dropdown or selector here to allow users to choose which business to view.
+        This would update the `businessId` cookie accordingly.
+      */}
 
       {/* Search Bar */}
       <div className="max-w-7xl mx-auto mb-6">
