@@ -19,6 +19,9 @@ export default function MyApp({ Component, pageProps }) {
       }
 
       const authToken = Cookies.get('authToken'); // Read the token from cookies
+       const userId = Cookies.get('userId');
+  console.log('[DEBUG] Cookies on App Load:', { authToken, userId });
+}, []);
       if (!authToken) {
         console.log('[DEBUG] No authToken found in cookies. Redirecting to login...');
         if (router.pathname !== '/login') router.push('/login');
