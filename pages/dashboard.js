@@ -23,7 +23,7 @@ export default function Dashboard() {
       console.log('[DEBUG] Cookies on Dashboard Load:', { authToken, userId });
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business?userId=${userId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business?user_id=${userId}`,
         {
           method: 'GET',
           credentials: 'include',
