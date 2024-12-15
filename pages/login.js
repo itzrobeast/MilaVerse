@@ -7,6 +7,7 @@ export default function Login() {
   const [error, setError] = useState(null);
   const router = useRouter();
 
+  // Load Facebook SDK on component mount
   useEffect(() => {
     if (typeof window === 'undefined' || document.getElementById('facebook-jssdk')) {
       console.log('[DEBUG] Facebook SDK already loaded.');
@@ -38,6 +39,7 @@ export default function Login() {
     document.body.appendChild(script);
   }, []);
 
+  // Handle Facebook login
   const handleLogin = () => {
     setLoading(true);
     setError(null);
@@ -49,60 +51,63 @@ export default function Login() {
       return;
     }
 
-    FB.login((response) => {
-      console.log('[DEBUG] FB.login response:', response);
+    FB.login(
+      (response) => {
+        console.log('[DEBUG] FB.login response:', response);
 
-      if (response.authResponse) {
-        const { accessToken } = response.authResponse;
-        console.log('[DEBUG] User authenticated. Access Token:', accessToken);
+        if (response.authResponse) {
+          const { accessToken } = response.authResponse;
+          console.log('[DEBUG] User authenticated. Access Token:', accessToken);
 
-        // Call an async helper function to process the login
-        processLogin(accessToken);
-      } else {
-        console.warn('[DEBUG] User canceled login or did not authorize.');
-        setError('User canceled login or did not authorize.');
-        setLoading(false);
+          // Call the backend to process login
+          processLogin(accessToken);
+        } else {
+          console.warn('[DEBUG] User canceled login or did not authorize.');
+          setError('User canceled login or did not authorize.');
+          setLoading(false);
+        }
+      },
+      {
+        scope: 'public_profile,email,pages_show_list,pages_messaging,business_management,instagram_manage_messages,leads_retrieval,instagram_basic',
+        return_scopes: true,
       }
-    }, {
-      scope: 'public_profile,email,pages_show_list,pages_messaging,business_management,instagram_manage_messages,leads_retrieval,instagram_basic',
-      return_scopes: true,
-    });
+    );
   };
 
+  // Process login with the backend
   const processLogin = async (accessToken) => {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken }),
-      credentials: 'include', // Ensure cookies are sent
-    });
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken }),
+        credentials: 'include',
+      });
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`Backend Error: ${errorText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Backend Error: ${errorText}`);
+      }
+
+      const { userId } = await response.json();
+
+      console.log('[DEBUG] Login successful:', { userId, accessToken });
+
+      // Set authentication cookies
+      Cookies.set('authToken', accessToken, { expires: 7 });
+      Cookies.set('userId', userId, { expires: 7 });
+
+      console.log('[DEBUG] Cookies after login:', document.cookie);
+
+      // Redirect to dashboard
+      router.push('/dashboard');
+    } catch (err) {
+      console.error('[ERROR] Login failed:', err.message);
+      setError('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
-
-    const { userId } = await res.json(); // Parse userId from the response
-
-    console.log('[DEBUG] Login successful:', { userId, accessToken });
-
-    // Store `authToken` and `userId` in cookies
-    Cookies.set('authToken', accessToken, { expires: 7 });
-    Cookies.set('userId', userId, { expires: 7 }); // Store userId properly
-    // Log the cookies to verify they are set
-    console.log('[DEBUG] Cookies after login:', document.cookie);
-
-    router.push('/dashboard');
-  } catch (err) {
-    console.error('[ERROR] Login failed:', err.message);
-    setError('Login failed. Please try again.');
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white">
@@ -118,4 +123,3 @@ export default function Login() {
     </div>
   );
 }
-
