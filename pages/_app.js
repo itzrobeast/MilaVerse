@@ -10,50 +10,43 @@ export default function MyApp({ Component, pageProps }) {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const checkSession = async () => {
-      const publicPages = ['/login', '/']; // Define public pages that don't require session verification
+  const checkSession = async () => {
+    const publicPages = ['/login', '/'];
 
-      // Skip verification for public pages
-      if (publicPages.includes(router.pathname)) {
-        console.log('[DEBUG] Public page detected:', router.pathname);
-        setLoading(false);
-        return;
-      }
+    if (publicPages.includes(router.pathname)) {
+      console.log('[DEBUG] Public page detected:', router.pathname);
+      setLoading(false);
+      return;
+    }
 
-      // Retrieve cookies
-      const authToken = Cookies.get('authToken');
-      const userId = Cookies.get('userId');
-      console.log('[DEBUG] Cookies on App Load:', { authToken, userId });
+    const authToken = Cookies.get('authToken');
+    const userId = Cookies.get('userId');
+    console.log('[DEBUG] Cookies on App Load:', { authToken, userId });
 
-      // Redirect to login if no authToken is found
-      if (!authToken || !userId) {
-        console.log('[DEBUG] Missing authToken or userId. Redirecting to login...');
+    if (!authToken || !userId) {
+      console.log('[DEBUG] Missing authToken or userId. Redirecting to login...');
+      router.push('/login');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const verifiedUser = await verifySession();
+      if (verifiedUser) {
+        setUser(verifiedUser);
+      } else {
         router.push('/login');
-        setLoading(false);
-        return;
       }
+    } catch (error) {
+      console.error('[ERROR] Session verification failed:', error.message);
+      router.push('/login');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      // Verify session with the backend
-      try {
-        console.log('[DEBUG] Verifying session...');
-        const verifiedUser = await verifySession();
-        if (verifiedUser) {
-          console.log('[DEBUG] Session verified successfully:', verifiedUser);
-          setUser(verifiedUser);
-        } else {
-          console.error('[ERROR] Invalid session. Redirecting to login...');
-          router.push('/login');
-        }
-      } catch (error) {
-        console.error('[ERROR] Session verification failed:', error.message);
-        router.push('/login');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkSession();
-  }, [router.pathname]); // Only re-run when the route changes
+  checkSession();
+}, [router.pathname]);
 
   // Show a loading state while verifying session
   if (loading) {
