@@ -75,7 +75,7 @@ export default function Login() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accessToken }),
-      credentials: 'include', // Include cookies
+      credentials: 'include', // Ensure cookies are sent
     });
 
     if (!res.ok) {
@@ -83,14 +83,13 @@ export default function Login() {
       throw new Error(`Backend Error: ${errorText}`);
     }
 
-    const { userId } = await res.json(); // Ensure backend sends `userId` in response
+    const { userId } = await res.json(); // Parse userId from the response
 
     console.log('[DEBUG] Login successful:', { userId, accessToken });
 
-    // Store `userId` in cookies and localStorage
+    // Store `authToken` and `userId` in cookies
     Cookies.set('authToken', accessToken, { expires: 7 });
-    Cookies.set('userId', userId, { expires: 7 }); // Save userId in cookies
-    localStorage.setItem('userId', userId); // Optional: For easier access in components
+    Cookies.set('userId', userId, { expires: 7 }); // Store userId properly
 
     router.push('/dashboard');
   } catch (err) {
@@ -100,6 +99,7 @@ export default function Login() {
     setLoading(false);
   }
 };
+
 
 
   return (
