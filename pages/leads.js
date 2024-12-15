@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Cookies from 'js-cookie';
 
 export default function Leads() {
   const [leads, setLeads] = useState([]);
@@ -9,34 +10,48 @@ export default function Leads() {
   const [currentPage, setCurrentPage] = useState(1);
   const leadsPerPage = 10; // Number of leads to show per page
 
-  // Fetch business ID from localStorage
-  const businessId = typeof window !== 'undefined' ? localStorage.getItem('businessId') : null;
+  // Fetch business ID from cookies
+  const businessId = Cookies.get('businessId');
+  const authToken = Cookies.get('authToken');
 
   useEffect(() => {
-    if (!businessId) return;
+    if (!businessId || !authToken) {
+      setError('Missing authentication details. Please log in again.');
+      setLoading(false);
+      return;
+    }
 
     const fetchLeads = async () => {
       try {
         const response = await fetch(
-          `https://nodejs-serverless-function-express-two-wine.vercel.app/retrieve-leads?business_id=${businessId}`
+          `https://nodejs-serverless-function-express-two-wine.vercel.app/retrieve-leads?business_id=${businessId}`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${authToken}`, // Pass authToken for validation
+            },
+            credentials: 'include', // Ensure cookies are sent
+          }
         );
+
         const data = await response.json();
 
         if (response.ok) {
-          setLeads(data.leads);
-          setFilteredLeads(data.leads); // Initially set filteredLeads to all leads
+          setLeads(data.leads || []);
+          setFilteredLeads(data.leads || []); // Initially set filteredLeads to all leads
         } else {
           setError(data.error || 'Failed to fetch leads');
         }
       } catch (err) {
-        setError('An error occurred while fetching leads');
+        console.error('[ERROR] Failed to fetch leads:', err.message);
+        setError('An error occurred while fetching leads.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchLeads();
-  }, [businessId]);
+  }, [businessId, authToken]);
 
   // Handle search functionality
   useEffect(() => {
@@ -72,6 +87,7 @@ export default function Leads() {
     }
   };
 
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -80,6 +96,7 @@ export default function Leads() {
     );
   }
 
+  // Error state
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -88,6 +105,7 @@ export default function Leads() {
     );
   }
 
+  // Main UI
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-8">
       {/* Header */}
