@@ -1,17 +1,13 @@
 import React from "react";
 
-export default function BusinessSettings({
-  business,
-  handleSave,
-  handleInputChange
-}) {
+export default function BusinessSettings({ business, handleSave, handleInputChange }) {
   return (
     <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
         Business Settings
       </h2>
-      <form className="space-y-6" onSubmit={handleSave}>
 
+      <form className="space-y-6" onSubmit={handleSave}>
         {/* Business Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
@@ -118,7 +114,7 @@ export default function BusinessSettings({
           />
         </div>
 
-        {/* Vonage Business Phone Number (Read Only) */}
+        {/* Vonage Number (Read Only) */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Your Mila Business Phone Number
