@@ -10,18 +10,20 @@ export default function Leads() {
   const [currentPage, setCurrentPage] = useState(1);
   const leadsPerPage = 10; // Number of leads to show per page
 
-  // Fetch business ID and auth token from cookies
-  const businessId = Cookies.get('businessId');
+  // Fetch user ID, business ID, and auth token from cookies
+  const userId = Cookies.get('userId');
+  const businessId = Cookies.get('businessId'); // Ensure this cookie is set
   const authToken = Cookies.get('authToken');
 
   // Debugging: Log the values
   useEffect(() => {
+    console.log('User ID:', userId);
     console.log('Business ID:', businessId);
     console.log('Auth Token:', authToken);
-  }, [businessId, authToken]);
+  }, [userId, businessId, authToken]);
 
   useEffect(() => {
-    if (!businessId || !authToken) {
+    if (!userId || !businessId || !authToken) {
       setError('Missing authentication details. Please log in again.');
       setLoading(false);
       return;
@@ -30,11 +32,13 @@ export default function Leads() {
     const fetchLeads = async () => {
       try {
         const response = await fetch(
-          `https://nodejs-serverless-function-express-two-wine.vercel.app/retrieve-leads?business_id=${businessId}`,
+          `https://nodejs-serverless-function-express-two-wine.vercel.app/retrieve-leads`,
           {
             method: 'GET',
             headers: {
-              Authorization: `Bearer ${authToken}`, // Pass authToken for validation
+              'Authorization': `Bearer ${authToken}`, // Pass authToken for validation
+              'X-User-Id': userId, // Custom header for user ID
+              'X-Business-Id': businessId, // Custom header for business ID
             },
             credentials: 'include', // Ensure cookies are sent if needed
           }
@@ -57,7 +61,7 @@ export default function Leads() {
     };
 
     fetchLeads();
-  }, [businessId, authToken]);
+  }, [userId, businessId, authToken]);
 
   // Handle search functionality
   useEffect(() => {
