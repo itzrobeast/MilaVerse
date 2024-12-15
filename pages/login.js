@@ -83,13 +83,14 @@ export default function Login() {
       throw new Error(`Backend Error: ${errorText}`);
     }
 
-    const { userId } = await res.json(); // Ensure backend sends userId in response
+    const { userId } = await res.json(); // Ensure backend sends `userId` in response
 
     console.log('[DEBUG] Login successful:', { userId, accessToken });
 
-    // Set cookies explicitly for debugging
+    // Store `userId` in cookies and localStorage
     Cookies.set('authToken', accessToken, { expires: 7 });
-    Cookies.set('userId', userId, { expires: 7 });
+    Cookies.set('userId', userId, { expires: 7 }); // Save userId in cookies
+    localStorage.setItem('userId', userId); // Optional: For easier access in components
 
     router.push('/dashboard');
   } catch (err) {
