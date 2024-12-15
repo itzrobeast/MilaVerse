@@ -10,6 +10,11 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
   const router = useRouter();
 
+  // Fetch business data on component mount
+  useEffect(() => {
+    fetchBusinessData();
+  }, []);
+
   // Fetch business data from backend
   const fetchBusinessData = async () => {
     try {
@@ -56,7 +61,7 @@ export default function Dashboard() {
       console.log('[DEBUG] Updating business data:', updatedBusiness);
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/update-business`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business/update-business`,
         {
           method: 'PUT',
           credentials: 'include',
@@ -74,7 +79,8 @@ export default function Dashboard() {
 
       const updatedData = await response.json();
       console.log('[DEBUG] Business updated successfully:', updatedData);
-      setBusiness(updatedData.data);
+      setBusiness(updatedData.data?.[0] || {}); 
+      // updatedData.data is usually an array from Supabase .select('*')
     } catch (err) {
       console.error('[ERROR] Updating business data failed:', err.message);
       setError(err.message);
@@ -89,11 +95,6 @@ export default function Dashboard() {
       [name]: value,
     }));
   };
-
-  // Fetch business data on component mount
-  useEffect(() => {
-    fetchBusinessData();
-  }, []);
 
   // Render loading, error, or the main dashboard UI
   if (loading) {
