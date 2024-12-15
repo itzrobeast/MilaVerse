@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import Cookies from 'js-cookie';
 import Navbar from '../components/Navbar';
 import BusinessSettings from '../components/BusinessSettings';
-import Cookies from 'js-cookie';
-import { useRouter } from 'next/router';
 
 export default function Dashboard() {
   const [business, setBusiness] = useState({});
@@ -11,74 +11,69 @@ export default function Dashboard() {
   const router = useRouter();
 
   // Fetch business data from backend
-const fetchDashboardData = async () => {
-  try {
-    const authToken = Cookies.get('authToken');
-    const userId = Cookies.get('userId'); // Fetch `userId` from cookies
+  const fetchDashboardData = async () => {
+    try {
+      const authToken = Cookies.get('authToken');
+      const userId = Cookies.get('userId');
 
-    console.log('[DEBUG] Cookies on Dashboard Load:', { authToken, userId });
+      console.log('[DEBUG] Cookies on Dashboard Load:', { authToken, userId });
 
-    if (!authToken || !userId) {
-      throw new Error('Authentication required. Redirecting to login.');
-    }
-
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business?userId=${userId}`,
-      {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      if (!authToken || !userId) {
+        throw new Error('Authentication required. Redirecting to login.');
       }
-    );
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`Failed to fetch business data: ${errorText}`);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business?userId=${userId}`,
+        {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch business data: ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('[DEBUG] Business data fetched successfully:', data);
+      setBusiness(data);
+    } catch (err) {
+      console.error('[ERROR] Fetching dashboard data failed:', err.message);
+      setError(err.message);
+      router.push('/login'); // Redirect to login on authentication failure
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const data = await res.json();
-    console.log('[DEBUG] Business data fetched successfully:', data);
-    setBusiness(data);
-  } catch (error) {
-    console.error('[ERROR] Fetching dashboard data failed:', error.message);
-    setError(error.message);
-    router.push('/login'); // Redirect to login on error
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-
-  // Fetch business data on component mount
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  // Handle Save Changes in Business Settings
+  // Handle saving business data
   const handleSave = async (updatedBusiness) => {
     try {
       console.log('[DEBUG] Updating business data:', updatedBusiness);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/get-business`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedBusiness),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/update-business`,
+        {
+          method: 'PUT',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updatedBusiness),
+        }
+      );
 
-      if (!res.ok) {
-        const errorText = await res.text();
+      if (!response.ok) {
+        const errorText = await response.text();
         throw new Error(`Failed to update business data: ${errorText}`);
       }
 
-      const updatedData = await res.json();
+      const updatedData = await response.json();
       console.log('[DEBUG] Business updated successfully:', updatedData);
-
       setBusiness(updatedData.data);
     } catch (err) {
       console.error('[ERROR] Updating business data failed:', err.message);
@@ -95,16 +90,33 @@ const fetchDashboardData = async () => {
     }));
   };
 
-  // Show loading or error messages
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p className="text-red-500">Error: {error}</p>;
+  // Fetch business data on component mount
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
-  // Render the dashboard with business settings form
+  // Render loading, error, or the main dashboard UI
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-lg text-gray-700 animate-pulse">Loading...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-lg text-red-600">{error}</p>
+      </div>
+    );
+  }
+
   return (
-    <div>
+    <div className="min-h-screen bg-gray-100">
       <Navbar />
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+      <div className="max-w-7xl mx-auto p-6">
+        <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
         <BusinessSettings
           business={business}
           handleSave={(e) => {
