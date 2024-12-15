@@ -92,18 +92,19 @@ export default function Login() {
         throw new Error(`Backend Error: ${errorText}`);
       }
 
-      const { userId } = await res.json(); // Parse userId from the response
+      const { userId, businessId } = await res.json(); // Parse userId from the response
 
-      console.log('[DEBUG] Backend login response:', { userId });
+      console.log('[DEBUG] Backend login response:', { userId, businessId });
 
-      if (!userId) {
-        console.error('[ERROR] userId is missing from the backend response.');
-        throw new Error('Login failed. No userId received.');
-      }
+      if (!userId || !businessId) {
+      console.error('[ERROR] userId or businessId is missing from the backend response.');
+      throw new Error('Login failed. Incomplete authentication details received.');
+    }
 
       // Store `authToken` and `userId` in cookies
       Cookies.set('authToken', accessToken, { expires: 7 });
       Cookies.set('userId', userId.toString(), { expires: 7 }); // Store as a string to ensure cookie compatibility
+      Cookies.set('businessId', businessId.toString(), { expires: 7 });
 
       console.log('[DEBUG] Cookies after login:', document.cookie);
 
