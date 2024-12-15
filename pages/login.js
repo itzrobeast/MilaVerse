@@ -103,7 +103,7 @@ export default function Login() {
 
       // Store `authToken` and `userId` in cookies
       Cookies.set('authToken', accessToken, { expires: 7 });
-      Cookies.set('userId', userId.toString(), { expires: 7 }); // Ensure it's stored as a string
+      Cookies.set('userId', userId.toString(), { expires: 7 }); // Store as a string to ensure cookie compatibility
 
       console.log('[DEBUG] Cookies after login:', document.cookie);
 
