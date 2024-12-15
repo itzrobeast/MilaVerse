@@ -10,9 +10,15 @@ export default function Leads() {
   const [currentPage, setCurrentPage] = useState(1);
   const leadsPerPage = 10; // Number of leads to show per page
 
-  // Fetch business ID from cookies
+  // Fetch business ID and auth token from cookies
   const businessId = Cookies.get('businessId');
   const authToken = Cookies.get('authToken');
+
+  // Debugging: Log the values
+  useEffect(() => {
+    console.log('Business ID:', businessId);
+    console.log('Auth Token:', authToken);
+  }, [businessId, authToken]);
 
   useEffect(() => {
     if (!businessId || !authToken) {
@@ -30,7 +36,7 @@ export default function Leads() {
             headers: {
               Authorization: `Bearer ${authToken}`, // Pass authToken for validation
             },
-            credentials: 'include', // Ensure cookies are sent
+            credentials: 'include', // Ensure cookies are sent if needed
           }
         );
 
@@ -67,6 +73,7 @@ export default function Leads() {
       );
       setFilteredLeads(filtered);
     }
+    setCurrentPage(1); // Reset to first page on search
   }, [searchQuery, leads]);
 
   // Pagination Logic
@@ -128,30 +135,34 @@ export default function Leads() {
       {/* Leads Table */}
       <div className="max-w-7xl mx-auto bg-white text-gray-800 shadow-lg rounded-xl p-8">
         <h2 className="text-2xl font-bold mb-6 text-center">Your Business Leads</h2>
-        <table className="table-auto w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="px-4 py-2 border border-gray-300 text-left">Name</th>
-              <th className="px-4 py-2 border border-gray-300 text-left">Email</th>
-              <th className="px-4 py-2 border border-gray-300 text-left">Phone</th>
-              <th className="px-4 py-2 border border-gray-300 text-left">Status</th>
-              <th className="px-4 py-2 border border-gray-300 text-left">Created At</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentLeads.map((lead) => (
-              <tr key={lead.id} className="hover:bg-gray-200">
-                <td className="px-4 py-2 border border-gray-300">{lead.name}</td>
-                <td className="px-4 py-2 border border-gray-300">{lead.email}</td>
-                <td className="px-4 py-2 border border-gray-300">{lead.phone}</td>
-                <td className="px-4 py-2 border border-gray-300">{lead.status}</td>
-                <td className="px-4 py-2 border border-gray-300">
-                  {new Date(lead.created_at).toLocaleString()}
-                </td>
+        {currentLeads.length === 0 ? (
+          <p className="text-center text-gray-600">No leads found.</p>
+        ) : (
+          <table className="table-auto w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="px-4 py-2 border border-gray-300 text-left">Name</th>
+                <th className="px-4 py-2 border border-gray-300 text-left">Email</th>
+                <th className="px-4 py-2 border border-gray-300 text-left">Phone</th>
+                <th className="px-4 py-2 border border-gray-300 text-left">Status</th>
+                <th className="px-4 py-2 border border-gray-300 text-left">Created At</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {currentLeads.map((lead) => (
+                <tr key={lead.id} className="hover:bg-gray-200">
+                  <td className="px-4 py-2 border border-gray-300">{lead.name}</td>
+                  <td className="px-4 py-2 border border-gray-300">{lead.email}</td>
+                  <td className="px-4 py-2 border border-gray-300">{lead.phone}</td>
+                  <td className="px-4 py-2 border border-gray-300">{lead.status}</td>
+                  <td className="px-4 py-2 border border-gray-300">
+                    {new Date(lead.created_at).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
         {/* Pagination */}
         {filteredLeads.length > leadsPerPage && (
