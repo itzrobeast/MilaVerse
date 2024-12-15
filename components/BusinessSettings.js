@@ -5,12 +5,12 @@ export default function BusinessSettings({ business, handleSave, handleInputChan
   const [isSaving, setIsSaving] = useState(false); // To handle button disable/loading state
 
   const handleSubmit = async (event) => {
-    event.preventDefault(); // Prevent form submission reload
+    event.preventDefault(); // Prevent the form from reloading
     setMessage(null); // Clear any existing messages
-    setIsSaving(true);
+    setIsSaving(true); // Show saving state
 
     try {
-      // Call handleSave (assumes this triggers the backend API call)
+      // Call handleSave passed as a prop
       const result = await handleSave();
 
       if (result?.success) {
@@ -22,7 +22,7 @@ export default function BusinessSettings({ business, handleSave, handleInputChan
       console.error("Error saving business settings:", error);
       setMessage({ type: "error", text: "An unexpected error occurred. Please try again later." });
     } finally {
-      setIsSaving(false); // Re-enable the Save button
+      setIsSaving(false); // Reset saving state
     }
   };
 
