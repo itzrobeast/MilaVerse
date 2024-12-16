@@ -37,8 +37,8 @@ export default function Leads() {
             method: 'GET',
             headers: {
               Authorization: `Bearer ${authToken}`,
-              'X-User-Id': userId,
-              'X-Business-Id': businessId,
+              userId: userId,
+              businessId: businessId,
             },
             credentials: 'include',
           }
