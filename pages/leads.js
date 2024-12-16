@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import Navbar from '../components/Navbar';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 export default function Leads() {
   const [leads, setLeads] = useState([]);
@@ -37,18 +38,18 @@ export default function Leads() {
           }
         );
 
-        const data = await response.json();
-
-        if (response.ok) {
-          console.log('[DEBUG] Fetched Leads:', data.leads);
-          setLeads(data.leads || []);
-          setFilteredLeads(data.leads || []);
-        } else {
-          setError(data.error || 'Failed to fetch leads.');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch leads.');
         }
+
+        const data = await response.json();
+        console.log('[DEBUG] Fetched Leads:', data.leads);
+        setLeads(data.leads || []);
+        setFilteredLeads(data.leads || []);
       } catch (err) {
         console.error('[ERROR] Failed to fetch leads:', err.message);
-        setError('An error occurred while fetching leads.');
+        setError(err.message || 'An error occurred while fetching leads.');
       } finally {
         setLoading(false);
       }
@@ -66,7 +67,7 @@ export default function Leads() {
       const phone = lead.phone || '';
       const status = lead.status || '';
       const city = lead.city || '';
-      const fieldData = lead.field_data
+      const fieldData = Array.isArray(lead.field_data)
         ? lead.field_data
             .map((item) => `${item.name}: ${item.values.join(', ')}`)
             .join('; ')
@@ -114,29 +115,29 @@ export default function Leads() {
       </thead>
       <tbody>
         {currentLeads.map((lead) => (
-          <tr key={lead.id} className="hover:bg-gray-200">
+          <tr key={lead.id || lead.lead_id} className="hover:bg-gray-200">
             <td className="px-4 py-2 border border-gray-300">
-              {lead.name || 'N/A'}
+              {typeof lead.name === 'string' ? lead.name : 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
-              {lead.email || 'N/A'}
+              {typeof lead.email === 'string' ? lead.email : 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
-              {lead.phone || 'N/A'}
+              {typeof lead.phone === 'string' ? lead.phone : 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
-              {lead.city || 'N/A'}
+              {typeof lead.city === 'string' ? lead.city : 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
-              {lead.status || 'N/A'}
+              {typeof lead.status === 'string' ? lead.status : 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
-              {lead.created_time
+              {lead.created_time && !isNaN(new Date(lead.created_time))
                 ? new Date(lead.created_time).toLocaleString()
                 : 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
-              {lead.field_data && Array.isArray(lead.field_data)
+              {Array.isArray(lead.field_data) && lead.field_data.length > 0
                 ? lead.field_data
                     .map((item) => {
                       const itemName = item.name || 'Unnamed Field';
@@ -171,53 +172,55 @@ export default function Leads() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-      <Navbar />
-      <div className="p-8">
-        <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold">Leads Dashboard</h1>
-          <p className="text-lg mt-2 opacity-90">Manage and review your business leads</p>
-        </header>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+        <Navbar />
+        <div className="p-8">
+          <header className="text-center mb-8">
+            <h1 className="text-4xl font-bold">Leads Dashboard</h1>
+            <p className="text-lg mt-2 opacity-90">Manage and review your business leads</p>
+          </header>
 
-        <div className="max-w-7xl mx-auto mb-6">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search leads by name, email, phone, city, or custom data..."
-            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 text-gray-800"
-          />
-        </div>
+          <div className="max-w-7xl mx-auto mb-6">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search leads by name, email, phone, city, or custom data..."
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 text-gray-800"
+            />
+          </div>
 
-        <div className="max-w-7xl mx-auto bg-white text-gray-800 shadow-lg rounded-xl p-8">
-          <h2 className="text-2xl font-bold mb-6 text-center">Your Business Leads</h2>
-          {filteredLeads.length === 0 ? (
-            <p className="text-center text-gray-600">No leads found.</p>
-          ) : (
-            renderLeadsTable()
-          )}
+          <div className="max-w-7xl mx-auto bg-white text-gray-800 shadow-lg rounded-xl p-8">
+            <h2 className="text-2xl font-bold mb-6 text-center">Your Business Leads</h2>
+            {filteredLeads.length === 0 ? (
+              <p className="text-center text-gray-600">No leads found.</p>
+            ) : (
+              renderLeadsTable()
+            )}
 
-          {filteredLeads.length > leadsPerPage && (
-            <div className="flex justify-between items-center mt-6">
-              <button
-                onClick={handlePrevPage}
-                disabled={currentPage === 1}
-                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <p className="text-sm">Page {currentPage} of {totalPages}</p>
-              <button
-                onClick={handleNextPage}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          )}
+            {filteredLeads.length > leadsPerPage && (
+              <div className="flex justify-between items-center mt-6">
+                <button
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <p className="text-sm">Page {currentPage} of {totalPages}</p>
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
