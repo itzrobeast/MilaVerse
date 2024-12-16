@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
+import Navbar from '../components/Navbar'; // Import Navbar for consistent UI
 
 export default function Leads() {
   const [leads, setLeads] = useState([]);
@@ -8,39 +9,38 @@ export default function Leads() {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const leadsPerPage = 10; // Number of leads to show per page
+  const leadsPerPage = 10;
 
-  // Fetch user ID, business ID, and auth token from cookies
+  // Fetch authentication details from cookies
   const userId = Cookies.get('userId');
-  const businessId = Cookies.get('businessId'); // Ensure this cookie is set
+  const businessId = Cookies.get('businessId');
   const authToken = Cookies.get('authToken');
 
-  // Debugging: Log the values
+  // Debugging logs for cookies
   useEffect(() => {
-    console.log('User ID:', userId);
-    console.log('Business ID:', businessId);
-    console.log('Auth Token:', authToken);
+    console.log('[DEBUG] Cookies:', { userId, businessId, authToken });
   }, [userId, businessId, authToken]);
 
+  // Fetch leads from backend
   useEffect(() => {
-    if (!userId || !businessId || !authToken) {
-      setError('Missing authentication details. Please log in again.');
-      setLoading(false);
-      return;
-    }
-
     const fetchLeads = async () => {
+      if (!userId || !businessId || !authToken) {
+        setError('Missing authentication details. Please log in again.');
+        setLoading(false);
+        return;
+      }
+
       try {
         const response = await fetch(
-          `https://nodejs-serverless-function-express-two-wine.vercel.app/retrieve-leads`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/retrieve-leads`,
           {
             method: 'GET',
             headers: {
-              'Authorization': `Bearer ${authToken}`, // Pass authToken for validation
-              'X-User-Id': userId, // Custom header for user ID
-              'X-Business-Id': businessId, // Custom header for business ID
+              Authorization: `Bearer ${authToken}`,
+              'X-User-Id': userId,
+              'X-Business-Id': businessId,
             },
-            credentials: 'include', // Ensure cookies are sent if needed
+            credentials: 'include',
           }
         );
 
@@ -48,9 +48,9 @@ export default function Leads() {
 
         if (response.ok) {
           setLeads(data.leads || []);
-          setFilteredLeads(data.leads || []); // Initially set filteredLeads to all leads
+          setFilteredLeads(data.leads || []);
         } else {
-          setError(data.error || 'Failed to fetch leads');
+          setError(data.error || 'Failed to fetch leads.');
         }
       } catch (err) {
         console.error('[ERROR] Failed to fetch leads:', err.message);
@@ -63,133 +63,111 @@ export default function Leads() {
     fetchLeads();
   }, [userId, businessId, authToken]);
 
-  // Handle search functionality
+  // Handle search input
   useEffect(() => {
-    if (searchQuery === '') {
-      setFilteredLeads(leads);
-    } else {
-      const lowercasedQuery = searchQuery.toLowerCase();
-      const filtered = leads.filter(
-        (lead) =>
-          lead.name.toLowerCase().includes(lowercasedQuery) ||
-          lead.email.toLowerCase().includes(lowercasedQuery) ||
-          lead.status.toLowerCase().includes(lowercasedQuery)
-      );
-      setFilteredLeads(filtered);
-    }
-    setCurrentPage(1); // Reset to first page on search
+    const query = searchQuery.toLowerCase();
+    const filtered = leads.filter(
+      (lead) =>
+        lead.name?.toLowerCase().includes(query) ||
+        lead.email?.toLowerCase().includes(query) ||
+        lead.status?.toLowerCase().includes(query)
+    );
+    setFilteredLeads(filtered);
+    setCurrentPage(1); // Reset pagination on search
   }, [searchQuery, leads]);
 
-  // Pagination Logic
+  // Pagination logic
   const indexOfLastLead = currentPage * leadsPerPage;
   const indexOfFirstLead = indexOfLastLead - leadsPerPage;
   const currentLeads = filteredLeads.slice(indexOfFirstLead, indexOfLastLead);
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
 
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
+  // Pagination handlers
+  const handleNextPage = () => currentPage < totalPages && setCurrentPage((prev) => prev + 1);
+  const handlePrevPage = () => currentPage > 1 && setCurrentPage((prev) => prev - 1);
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prev) => prev - 1);
-    }
-  };
+  // UI Components
+  const renderLeadsTable = () => (
+    <table className="table-auto w-full border-collapse border border-gray-300">
+      <thead>
+        <tr className="bg-gray-100">
+          <th className="px-4 py-2 border border-gray-300 text-left">Name</th>
+          <th className="px-4 py-2 border border-gray-300 text-left">Email</th>
+          <th className="px-4 py-2 border border-gray-300 text-left">Phone</th>
+          <th className="px-4 py-2 border border-gray-300 text-left">Status</th>
+          <th className="px-4 py-2 border border-gray-300 text-left">Created At</th>
+        </tr>
+      </thead>
+      <tbody>
+        {currentLeads.map((lead) => (
+          <tr key={lead.id} className="hover:bg-gray-200">
+            <td className="px-4 py-2 border border-gray-300">{lead.name || 'N/A'}</td>
+            <td className="px-4 py-2 border border-gray-300">{lead.email || 'N/A'}</td>
+            <td className="px-4 py-2 border border-gray-300">{lead.phone || 'N/A'}</td>
+            <td className="px-4 py-2 border border-gray-300">{lead.status || 'N/A'}</td>
+            <td className="px-4 py-2 border border-gray-300">
+              {lead.created_at ? new Date(lead.created_at).toLocaleString() : 'N/A'}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-lg text-gray-700 animate-pulse">Loading leads...</p>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-lg text-red-600">{error}</p>
-      </div>
-    );
-  }
-
-  // Main UI
+  // Render
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-8">
-      {/* Header */}
-      <header className="text-center mb-8">
-        <h1 className="text-4xl font-bold">Leads Dashboard</h1>
-        <p className="text-lg mt-2 opacity-90">Manage and review your business leads</p>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+      <Navbar /> {/* Include Navbar for consistent UI */}
+      <div className="p-8">
+        {/* Header */}
+        <header className="text-center mb-8">
+          <h1 className="text-4xl font-bold">Leads Dashboard</h1>
+          <p className="text-lg mt-2 opacity-90">Manage and review your business leads</p>
+        </header>
 
-      {/* Search Bar */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search leads by name, email, or status..."
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-        />
-      </div>
+        {/* Search Bar */}
+        <div className="max-w-7xl mx-auto mb-6">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search leads by name, email, or status..."
+            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 text-gray-800"
+          />
+        </div>
 
-      {/* Leads Table */}
-      <div className="max-w-7xl mx-auto bg-white text-gray-800 shadow-lg rounded-xl p-8">
-        <h2 className="text-2xl font-bold mb-6 text-center">Your Business Leads</h2>
-        {currentLeads.length === 0 ? (
-          <p className="text-center text-gray-600">No leads found.</p>
-        ) : (
-          <table className="table-auto w-full border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="px-4 py-2 border border-gray-300 text-left">Name</th>
-                <th className="px-4 py-2 border border-gray-300 text-left">Email</th>
-                <th className="px-4 py-2 border border-gray-300 text-left">Phone</th>
-                <th className="px-4 py-2 border border-gray-300 text-left">Status</th>
-                <th className="px-4 py-2 border border-gray-300 text-left">Created At</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentLeads.map((lead) => (
-                <tr key={lead.id} className="hover:bg-gray-200">
-                  <td className="px-4 py-2 border border-gray-300">{lead.name}</td>
-                  <td className="px-4 py-2 border border-gray-300">{lead.email}</td>
-                  <td className="px-4 py-2 border border-gray-300">{lead.phone}</td>
-                  <td className="px-4 py-2 border border-gray-300">{lead.status}</td>
-                  <td className="px-4 py-2 border border-gray-300">
-                    {new Date(lead.created_at).toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        {/* Leads Table */}
+        <div className="max-w-7xl mx-auto bg-white text-gray-800 shadow-lg rounded-xl p-8">
+          <h2 className="text-2xl font-bold mb-6 text-center">Your Business Leads</h2>
+          {filteredLeads.length === 0 ? (
+            <p className="text-center text-gray-600">No leads found.</p>
+          ) : (
+            renderLeadsTable()
+          )}
 
-        {/* Pagination */}
-        {filteredLeads.length > leadsPerPage && (
-          <div className="flex justify-between items-center mt-6">
-            <button
-              onClick={handlePrevPage}
-              disabled={currentPage === 1}
-              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <p className="text-sm">
-              Page {currentPage} of {totalPages}
-            </p>
-            <button
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        )}
+          {/* Pagination */}
+          {filteredLeads.length > leadsPerPage && (
+            <div className="flex justify-between items-center mt-6">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 1}
+                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <p className="text-sm">
+                Page {currentPage} of {totalPages}
+              </p>
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
