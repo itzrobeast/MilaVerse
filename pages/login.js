@@ -68,7 +68,7 @@ export default function Login() {
         }
       },
       {
-        scope: 'public_profile,email,pages_show_list,pages_messaging,business_management,instagram_manage_messages,leads_retrieval,instagram_basic',
+        scope: 'public_profile,email,pages_show_list,pages_messaging,business_management,pages_manage_ads,pages_messaging,instagram_manage_messages,leads_retrieval,instagram_basic',
         return_scopes: true,
       }
     );
