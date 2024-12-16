@@ -1,7 +1,9 @@
+// pages/leads.js
+
 import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import Navbar from '../components/Navbar';
-import ErrorBoundary from '../components/ErrorBoundary';
+import ErrorBoundary from '../components/ErrorBoundary'; // Ensure this component exists
 
 export default function Leads() {
   const [leads, setLeads] = useState([]);
@@ -204,7 +206,9 @@ export default function Leads() {
                 <button
                   onClick={handlePrevPage}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                  className={`px-4 py-2 bg-gray-300 rounded ${
+                    currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-400'
+                  }`}
                 >
                   Previous
                 </button>
@@ -212,7 +216,9 @@ export default function Leads() {
                 <button
                   onClick={handleNextPage}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                  className={`px-4 py-2 bg-gray-300 rounded ${
+                    currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-400'
+                  }`}
                 >
                   Next
                 </button>
