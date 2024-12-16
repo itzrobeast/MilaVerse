@@ -104,9 +104,9 @@ export default function Leads() {
   // Table Render Logic
   const renderLeadsTable = () => (
     <div className="overflow-x-auto">
-      <table className="min-w-full bg-white rounded-lg overflow-hidden shadow">
+      <table className="min-w-full bg-gray-800 text-white rounded-lg overflow-hidden shadow">
         <thead>
-          <tr className="bg-gray-200 text-gray-700">
+          <tr className="bg-gray-700">
             <th className="px-4 py-2 text-left">Name</th>
             <th className="px-4 py-2 text-left">Email</th>
             <th className="px-4 py-2 text-left">Phone</th>
@@ -118,7 +118,7 @@ export default function Leads() {
         </thead>
         <tbody>
           {currentLeads.map((lead) => (
-            <tr key={lead.id || lead.lead_id} className="border-t hover:bg-gray-100">
+            <tr key={lead.id || lead.lead_id} className="border-t border-gray-600 hover:bg-gray-700">
               <td className="px-4 py-2 break-words">
                 {lead.name?.trim() ? lead.name : 'N/A'}
               </td>
@@ -191,7 +191,7 @@ export default function Leads() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search leads by name, email, phone, city, or custom data..."
-              className="w-full px-4 py-3 rounded-lg bg-gray-100 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
