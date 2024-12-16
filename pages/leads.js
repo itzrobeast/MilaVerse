@@ -1,7 +1,6 @@
-// Leads.js
 import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
-import Navbar from '../components/Navbar'; // Import Navbar for consistent UI
+import Navbar from '../components/Navbar';
 
 export default function Leads() {
   const [leads, setLeads] = useState([]);
@@ -15,12 +14,10 @@ export default function Leads() {
   // Fetch authentication details from cookies
   const userId = Cookies.get('userId');
   const businessId = Cookies.get('businessId');
-  // const authToken = Cookies.get('authToken'); // Not needed for retrieve-leads if using cookies
 
-  // Debugging logs for cookies
   useEffect(() => {
-    console.log('[DEBUG] Cookies:', { userId, businessId /*, authToken */ });
-  }, [userId, businessId /*, authToken */]);
+    console.log('[DEBUG] Cookies:', { userId, businessId });
+  }, [userId, businessId]);
 
   // Fetch leads from backend
   useEffect(() => {
@@ -36,14 +33,14 @@ export default function Leads() {
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/retrieve-leads`,
           {
             method: 'GET',
-            // Removed headers: userId and businessId
-            credentials: 'include', // Ensure cookies are sent
+            credentials: 'include', // Include cookies in the request
           }
         );
 
         const data = await response.json();
 
         if (response.ok) {
+          console.log('[DEBUG] Fetched Leads:', data.leads);
           setLeads(data.leads || []);
           setFilteredLeads(data.leads || []);
         } else {
@@ -60,30 +57,36 @@ export default function Leads() {
     fetchLeads();
   }, [userId, businessId]);
 
-  // Handle search input
+  // Search Logic
   useEffect(() => {
     const query = searchQuery.toLowerCase();
     const filtered = leads.filter((lead) => {
-      // Extract relevant fields from field_data
       const name = getLeadField(lead, 'name') || '';
       const email = getLeadField(lead, 'email') || '';
       const phone = getLeadField(lead, 'phone') || '';
       const status = getLeadField(lead, 'status') || '';
+      const city = getLeadField(lead, 'city') || '';
+      const fieldData = lead.field_data
+        ? lead.field_data.map((item) => `${item.name}: ${item.values.join(', ')}`).join('; ')
+        : '';
 
       return (
         name.toLowerCase().includes(query) ||
         email.toLowerCase().includes(query) ||
         phone.toLowerCase().includes(query) ||
-        status.toLowerCase().includes(query)
+        status.toLowerCase().includes(query) ||
+        city.toLowerCase().includes(query) ||
+        fieldData.toLowerCase().includes(query)
       );
     });
+
     setFilteredLeads(filtered);
     setCurrentPage(1); // Reset pagination on search
   }, [searchQuery, leads]);
 
   // Helper function to extract specific fields from field_data
   const getLeadField = (lead, fieldName) => {
-    const field = lead.field_data.find(
+    const field = lead.field_data?.find(
       (item) => item.name.toLowerCase() === fieldName.toLowerCase()
     );
     return field ? field.values[0] : null;
@@ -101,7 +104,7 @@ export default function Leads() {
   const handlePrevPage = () =>
     currentPage > 1 && setCurrentPage((prev) => prev - 1);
 
-  // UI Components
+  // Table Render Logic
   const renderLeadsTable = () => (
     <table className="table-auto w-full border-collapse border border-gray-300">
       <thead>
@@ -109,9 +112,10 @@ export default function Leads() {
           <th className="px-4 py-2 border border-gray-300 text-left">Name</th>
           <th className="px-4 py-2 border border-gray-300 text-left">Email</th>
           <th className="px-4 py-2 border border-gray-300 text-left">Phone</th>
+          <th className="px-4 py-2 border border-gray-300 text-left">City</th>
           <th className="px-4 py-2 border border-gray-300 text-left">Status</th>
-          <th className="px-4 py-2 border border-gray-300 text-left">Created At</th>
-          {/* Add more headers for custom questions if needed */}
+          <th className="px-4 py-2 border border-gray-300 text-left">Created Time</th>
+          <th className="px-4 py-2 border border-gray-300 text-left">Custom Data</th>
         </tr>
       </thead>
       <tbody>
@@ -127,6 +131,9 @@ export default function Leads() {
               {getLeadField(lead, 'phone') || 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
+              {getLeadField(lead, 'city') || 'N/A'}
+            </td>
+            <td className="px-4 py-2 border border-gray-300">
               {getLeadField(lead, 'status') || 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
@@ -134,7 +141,11 @@ export default function Leads() {
                 ? new Date(lead.created_time).toLocaleString()
                 : 'N/A'}
             </td>
-            {/* Add more cells for custom questions if needed */}
+            <td className="px-4 py-2 border border-gray-300">
+              {lead.field_data
+                ? lead.field_data.map((item) => `${item.name}: ${item.values.join(', ')}`).join('; ')
+                : 'N/A'}
+            </td>
           </tr>
         ))}
       </tbody>
@@ -159,39 +170,31 @@ export default function Leads() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-      <Navbar /> {/* Include Navbar for consistent UI */}
+      <Navbar />
       <div className="p-8">
-        {/* Header */}
         <header className="text-center mb-8">
           <h1 className="text-4xl font-bold">Leads Dashboard</h1>
-          <p className="text-lg mt-2 opacity-90">
-            Manage and review your business leads
-          </p>
+          <p className="text-lg mt-2 opacity-90">Manage and review your business leads</p>
         </header>
 
-        {/* Search Bar */}
         <div className="max-w-7xl mx-auto mb-6">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search leads by name, email, phone, or status..."
+            placeholder="Search leads by name, email, phone, city, or custom data..."
             className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 text-gray-800"
           />
         </div>
 
-        {/* Leads Table */}
         <div className="max-w-7xl mx-auto bg-white text-gray-800 shadow-lg rounded-xl p-8">
-          <h2 className="text-2xl font-bold mb-6 text-center">
-            Your Business Leads
-          </h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Your Business Leads</h2>
           {filteredLeads.length === 0 ? (
             <p className="text-center text-gray-600">No leads found.</p>
           ) : (
             renderLeadsTable()
           )}
 
-          {/* Pagination */}
           {filteredLeads.length > leadsPerPage && (
             <div className="flex justify-between items-center mt-6">
               <button
@@ -201,9 +204,7 @@ export default function Leads() {
               >
                 Previous
               </button>
-              <p className="text-sm">
-                Page {currentPage} of {totalPages}
-              </p>
+              <p className="text-sm">Page {currentPage} of {totalPages}</p>
               <button
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
