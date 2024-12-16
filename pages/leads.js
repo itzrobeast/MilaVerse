@@ -15,12 +15,12 @@ export default function Leads() {
   // Fetch authentication details from cookies
   const userId = Cookies.get('userId');
   const businessId = Cookies.get('businessId');
-  const authToken = Cookies.get('authToken'); // Not needed for retrieve-leads if using cookies
+  // const authToken = Cookies.get('authToken'); // Not needed for retrieve-leads if using cookies
 
   // Debugging logs for cookies
   useEffect(() => {
-    console.log('[DEBUG] Cookies:', { userId, businessId, authToken });
-  }, [userId, businessId, authToken]);
+    console.log('[DEBUG] Cookies:', { userId, businessId /*, authToken */ });
+  }, [userId, businessId /*, authToken */]);
 
   // Fetch leads from backend
   useEffect(() => {
@@ -65,13 +65,21 @@ export default function Leads() {
     const query = searchQuery.toLowerCase();
     const filtered = leads.filter(
       (lead) =>
-        lead.name?.toLowerCase().includes(query) ||
-        lead.email?.toLowerCase().includes(query) ||
-        lead.status?.toLowerCase().includes(query)
+        getLeadField(lead, 'name')?.toLowerCase().includes(query) ||
+        getLeadField(lead, 'email')?.toLowerCase().includes(query) ||
+        getLeadField(lead, 'status')?.toLowerCase().includes(query)
     );
     setFilteredLeads(filtered);
     setCurrentPage(1); // Reset pagination on search
   }, [searchQuery, leads]);
+
+  // Helper to extract field data
+  const getLeadField = (lead, fieldName) => {
+    const field = lead.field_data.find(
+      (item) => item.name.toLowerCase() === fieldName.toLowerCase()
+    );
+    return field ? field.values[0] : null;
+  };
 
   // Pagination logic
   const indexOfLastLead = currentPage * leadsPerPage;
@@ -98,10 +106,18 @@ export default function Leads() {
       <tbody>
         {currentLeads.map((lead) => (
           <tr key={lead.id} className="hover:bg-gray-200">
-            <td className="px-4 py-2 border border-gray-300">{lead.name || 'N/A'}</td>
-            <td className="px-4 py-2 border border-gray-300">{lead.email || 'N/A'}</td>
-            <td className="px-4 py-2 border border-gray-300">{lead.phone || 'N/A'}</td>
-            <td className="px-4 py-2 border border-gray-300">{lead.status || 'N/A'}</td>
+            <td className="px-4 py-2 border border-gray-300">
+              {getLeadField(lead, 'name') || 'N/A'}
+            </td>
+            <td className="px-4 py-2 border border-gray-300">
+              {getLeadField(lead, 'email') || 'N/A'}
+            </td>
+            <td className="px-4 py-2 border border-gray-300">
+              {getLeadField(lead, 'phone') || 'N/A'}
+            </td>
+            <td className="px-4 py-2 border border-gray-300">
+              {getLeadField(lead, 'status') || 'N/A'}
+            </td>
             <td className="px-4 py-2 border border-gray-300">
               {lead.created_time ? new Date(lead.created_time).toLocaleString() : 'N/A'}
             </td>
