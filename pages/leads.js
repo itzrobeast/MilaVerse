@@ -63,17 +63,25 @@ export default function Leads() {
   // Handle search input
   useEffect(() => {
     const query = searchQuery.toLowerCase();
-    const filtered = leads.filter(
-      (lead) =>
-        getLeadField(lead, 'name')?.toLowerCase().includes(query) ||
-        getLeadField(lead, 'email')?.toLowerCase().includes(query) ||
-        getLeadField(lead, 'status')?.toLowerCase().includes(query)
-    );
+    const filtered = leads.filter((lead) => {
+      // Extract relevant fields from field_data
+      const name = getLeadField(lead, 'name') || '';
+      const email = getLeadField(lead, 'email') || '';
+      const phone = getLeadField(lead, 'phone') || '';
+      const status = getLeadField(lead, 'status') || '';
+
+      return (
+        name.toLowerCase().includes(query) ||
+        email.toLowerCase().includes(query) ||
+        phone.toLowerCase().includes(query) ||
+        status.toLowerCase().includes(query)
+      );
+    });
     setFilteredLeads(filtered);
     setCurrentPage(1); // Reset pagination on search
   }, [searchQuery, leads]);
 
-  // Helper to extract field data
+  // Helper function to extract specific fields from field_data
   const getLeadField = (lead, fieldName) => {
     const field = lead.field_data.find(
       (item) => item.name.toLowerCase() === fieldName.toLowerCase()
@@ -88,8 +96,10 @@ export default function Leads() {
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
 
   // Pagination handlers
-  const handleNextPage = () => currentPage < totalPages && setCurrentPage((prev) => prev + 1);
-  const handlePrevPage = () => currentPage > 1 && setCurrentPage((prev) => prev - 1);
+  const handleNextPage = () =>
+    currentPage < totalPages && setCurrentPage((prev) => prev + 1);
+  const handlePrevPage = () =>
+    currentPage > 1 && setCurrentPage((prev) => prev - 1);
 
   // UI Components
   const renderLeadsTable = () => (
@@ -101,6 +111,7 @@ export default function Leads() {
           <th className="px-4 py-2 border border-gray-300 text-left">Phone</th>
           <th className="px-4 py-2 border border-gray-300 text-left">Status</th>
           <th className="px-4 py-2 border border-gray-300 text-left">Created At</th>
+          {/* Add more headers for custom questions if needed */}
         </tr>
       </thead>
       <tbody>
@@ -119,8 +130,11 @@ export default function Leads() {
               {getLeadField(lead, 'status') || 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
-              {lead.created_time ? new Date(lead.created_time).toLocaleString() : 'N/A'}
+              {lead.created_time
+                ? new Date(lead.created_time).toLocaleString()
+                : 'N/A'}
             </td>
+            {/* Add more cells for custom questions if needed */}
           </tr>
         ))}
       </tbody>
@@ -145,12 +159,14 @@ export default function Leads() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-      <Navbar />
+      <Navbar /> {/* Include Navbar for consistent UI */}
       <div className="p-8">
         {/* Header */}
         <header className="text-center mb-8">
           <h1 className="text-4xl font-bold">Leads Dashboard</h1>
-          <p className="text-lg mt-2 opacity-90">Manage and review your business leads</p>
+          <p className="text-lg mt-2 opacity-90">
+            Manage and review your business leads
+          </p>
         </header>
 
         {/* Search Bar */}
@@ -159,14 +175,16 @@ export default function Leads() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search leads by name, email, or status..."
+            placeholder="Search leads by name, email, phone, or status..."
             className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 text-gray-800"
           />
         </div>
 
         {/* Leads Table */}
         <div className="max-w-7xl mx-auto bg-white text-gray-800 shadow-lg rounded-xl p-8">
-          <h2 className="text-2xl font-bold mb-6 text-center">Your Business Leads</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">
+            Your Business Leads
+          </h2>
           {filteredLeads.length === 0 ? (
             <p className="text-center text-gray-600">No leads found.</p>
           ) : (
