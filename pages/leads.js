@@ -119,19 +119,19 @@ export default function Leads() {
         {currentLeads.map((lead) => (
           <tr key={lead.id || lead.lead_id} className="hover:bg-gray-200">
             <td className="px-4 py-2 border border-gray-300">
-              {typeof lead.name === 'string' ? lead.name : 'N/A'}
+              {typeof lead.name === 'string' && lead.name.trim() !== '' ? lead.name : 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
-              {typeof lead.email === 'string' ? lead.email : 'N/A'}
+              {typeof lead.email === 'string' && lead.email.trim() !== '' ? lead.email : 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
-              {typeof lead.phone === 'string' ? lead.phone : 'N/A'}
+              {typeof lead.phone === 'string' && lead.phone.trim() !== '' ? lead.phone : 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
-              {typeof lead.city === 'string' ? lead.city : 'N/A'}
+              {typeof lead.city === 'string' && lead.city.trim() !== '' ? lead.city : 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
-              {typeof lead.status === 'string' ? lead.status : 'N/A'}
+              {typeof lead.status === 'string' && lead.status.trim() !== '' ? lead.status : 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
               {lead.created_time && !isNaN(new Date(lead.created_time))
@@ -230,3 +230,4 @@ export default function Leads() {
     </ErrorBoundary>
   );
 }
+
