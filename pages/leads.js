@@ -61,18 +61,14 @@ export default function Leads() {
   useEffect(() => {
     const query = searchQuery.toLowerCase();
     const filtered = leads.filter((lead) => {
-      const name = getLeadField(lead, 'name') || '';
-      const email = getLeadField(lead, 'email') || '';
-      const phone = getLeadField(lead, 'phone') || '';
-      const status = getLeadField(lead, 'status') || '';
-      const city = getLeadField(lead, 'city') || '';
+      const name = lead.name || '';
+      const email = lead.email || '';
+      const phone = lead.phone || '';
+      const status = lead.status || '';
+      const city = lead.city || '';
       const fieldData = lead.field_data
         ? lead.field_data
-            .map((item) => {
-              const itemName = item.name || '';
-              const itemValues = Array.isArray(item.values) ? item.values.join(', ') : '';
-              return `${itemName}: ${itemValues}`;
-            })
+            .map((item) => `${item.name}: ${item.values.join(', ')}`)
             .join('; ')
         : '';
 
@@ -89,17 +85,6 @@ export default function Leads() {
     setFilteredLeads(filtered);
     setCurrentPage(1); // Reset pagination on search
   }, [searchQuery, leads]);
-
-  // Helper function to extract specific fields from field_data
-  const getLeadField = (lead, fieldName) => {
-    const field = lead.field_data?.find(
-      (item) => item.name.toLowerCase() === fieldName.toLowerCase()
-    );
-    if (field && Array.isArray(field.values)) {
-      return field.values.join(', ');
-    }
-    return field ? field.values || null : null;
-  };
 
   // Pagination logic
   const indexOfLastLead = currentPage * leadsPerPage;
@@ -131,19 +116,19 @@ export default function Leads() {
         {currentLeads.map((lead) => (
           <tr key={lead.id} className="hover:bg-gray-200">
             <td className="px-4 py-2 border border-gray-300">
-              {getLeadField(lead, 'name') || 'N/A'}
+              {lead.name || 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
-              {getLeadField(lead, 'email') || 'N/A'}
+              {lead.email || 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
-              {getLeadField(lead, 'phone') || 'N/A'}
+              {lead.phone || 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
-              {getLeadField(lead, 'city') || 'N/A'}
+              {lead.city || 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
-              {getLeadField(lead, 'status') || 'N/A'}
+              {lead.status || 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
               {lead.created_time
