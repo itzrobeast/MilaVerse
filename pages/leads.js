@@ -67,7 +67,13 @@ export default function Leads() {
       const status = getLeadField(lead, 'status') || '';
       const city = getLeadField(lead, 'city') || '';
       const fieldData = lead.field_data
-        ? lead.field_data.map((item) => `${item.name}: ${item.values.join(', ')}`).join('; ')
+        ? lead.field_data
+            .map((item) => {
+              const itemName = item.name || '';
+              const itemValues = Array.isArray(item.values) ? item.values.join(', ') : '';
+              return `${itemName}: ${itemValues}`;
+            })
+            .join('; ')
         : '';
 
       return (
@@ -89,7 +95,10 @@ export default function Leads() {
     const field = lead.field_data?.find(
       (item) => item.name.toLowerCase() === fieldName.toLowerCase()
     );
-    return field ? field.values[0] : null;
+    if (field && Array.isArray(field.values)) {
+      return field.values.join(', ');
+    }
+    return field ? field.values || null : null;
   };
 
   // Pagination logic
@@ -142,8 +151,16 @@ export default function Leads() {
                 : 'N/A'}
             </td>
             <td className="px-4 py-2 border border-gray-300">
-              {lead.field_data
-                ? lead.field_data.map((item) => `${item.name}: ${item.values.join(', ')}`).join('; ')
+              {lead.field_data && Array.isArray(lead.field_data)
+                ? lead.field_data
+                    .map((item) => {
+                      const itemName = item.name || 'Unnamed Field';
+                      const itemValues = Array.isArray(item.values)
+                        ? item.values.join(', ')
+                        : item.values || 'No Value';
+                      return `${itemName}: ${itemValues}`;
+                    })
+                    .join('; ')
                 : 'N/A'}
             </td>
           </tr>
